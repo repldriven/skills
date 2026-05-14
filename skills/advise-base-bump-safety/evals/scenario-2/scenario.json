@@ -1,0 +1,8 @@
+{
+  "fixture": {
+    "type": "commit",
+    "repoUrl": "https://github.com/repldriven/skills",
+    "ref": "advise-base-bump-safety",
+    "exclude": ["skills/advise-base-bump-safety/SKILL.md"]
+  }
+}
