@@ -7,7 +7,7 @@
     },
     {
       "scenario": "Cross-classification ambiguity: a bump that legitimately matches two categories",
-      "reasoning": "The rubric documents precedence resolution (e.g. license-aware beats safe-mechanical for RHEL UBI majors — covered by scenario-2). A more synthetic test, e.g. an alpine:edge → alpine:edge `requires-migration AND not-recommended` ambiguity, is contrived enough that real-world advice doesn't depend on it. The single-precedence-rule scenarios in scenario-2 (license-aware over safe-mechanical) and scenario-4 (not-recommended over anything) cover the precedence behaviour without needing a multi-conflict synthetic case."
+      "reasoning": "The rubric documents precedence resolution (e.g. license-aware beats safe-mechanical for RHEL UBI majors — covered by rhel-ubi-license-aware). A more synthetic test, e.g. an alpine:edge → alpine:edge `requires-migration AND not-recommended` ambiguity, is contrived enough that real-world advice doesn't depend on it. The single-precedence-rule scenarios in rhel-ubi-license-aware (license-aware over safe-mechanical) and alpine-edge-not-recommended (not-recommended over anything) cover the precedence behaviour without needing a multi-conflict synthetic case."
     }
   ]
 }

@@ -3,7 +3,7 @@
   "total_feasible": 5,
   "scenarios": [
     {
-      "id": "scenario-0",
+      "id": "chart-sources-with-release-tag",
       "capability": "Resolution-cascade + release-tag checkout against a multi-source chart",
       "exercises_signals": ["chart-sources"],
       "instructions_covered": [
@@ -21,7 +21,7 @@
       "expected_duration_minutes": 4
     },
     {
-      "id": "scenario-1",
+      "id": "yaml-aware-inventory-with-crossplane",
       "capability": "YAML-aware inventory of container-images AND Crossplane packages",
       "exercises_signals": [],
       "instructions_covered": [
@@ -35,7 +35,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-2",
+      "id": "nix-built-dockerfile-less",
       "capability": "Build-system-aware path for Dockerfile-less (Nix-built) images",
       "exercises_signals": [],
       "instructions_covered": [
@@ -47,7 +47,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-3",
+      "id": "base-inferred-from-labels-fallback",
       "capability": "Source-unknown fallback to base-inferred-from-labels via inherited image labels",
       "exercises_signals": ["base-inferred-from-labels"],
       "instructions_covered": [
@@ -60,7 +60,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-4",
+      "id": "rolling-dev-vs-stable-classification",
       "capability": "Classify rolling-dev vs rolling-stable vs LTS interim correctly",
       "exercises_signals": [],
       "instructions_covered": [
