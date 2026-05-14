@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent identifies an Ubuntu interim target as interim-caution and recommends the LTS alternative, instead of treating the bump as 'current → current' (which would happen if the rubric just compared family equality).",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is interim-caution",
+      "description": "advice.md classifies the bump as interim-caution (NOT safe-mechanical and NOT no-action-needed despite both sides being Ubuntu).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites 'Ubuntu interim' indicator with support-window note",
+      "description": "Indicators section names 'Ubuntu interim' (or equivalent) and explicitly notes the 9-month support window vs LTS 5+ years.",
+      "max_score": 20
+    },
+    {
+      "name": "Recommended action: LTS alternative",
+      "description": "Recommended action recommends staying on ubuntu:24.04 LTS (or notes that 26.04 LTS would be the next LTS target). Captures the LTS-default preference from the rubric.",
+      "max_score": 20
+    },
+    {
+      "name": "Acknowledges the developer's rationale",
+      "description": "The advice notes the developer's GCC 14 motivation and offers an alternative (e.g. backports, a build-arg, or a separate non-runtime container for compilation) — not a flat 'no'.",
+      "max_score": 10
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "The advice does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

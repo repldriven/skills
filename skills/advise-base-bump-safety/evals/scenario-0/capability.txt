@@ -1,0 +1,1 @@
+Classify a Go-builder Debian-major bump as safe-mechanical with the right indicators.

@@ -1,0 +1,65 @@
+{
+  "skill": "advise-base-bump-safety",
+  "total_feasible": 5,
+  "scenarios": [
+    {
+      "id": "scenario-0",
+      "capability": "Classify a Go-builder Debian-major bump as safe-mechanical with the right indicators",
+      "exercises_classifications": ["safe-mechanical"],
+      "instructions_covered": [
+        "Go-built images (CGO_ENABLED=0) and JVM/Temurin images are safe-mechanical for Debian/RHEL major bumps; cite the specific safe pattern name from the rubric.",
+        "Cite the rubric's named indicators verbatim (or clearly equivalent) when justifying each classification.",
+        "Never cite specific CVE identifiers unless they appear in the input context."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-1",
+      "capability": "Classify a Python-runtime Debian-major bump as requires-migration with the right indicators",
+      "exercises_classifications": ["requires-migration"],
+      "instructions_covered": [
+        "Python-runtime Debian-major bumps are requires-migration when binary wheels are present; the rubric indicators 'System Python major shift', 'OpenSSL major bump', 'glibc symbol-version jump' all apply.",
+        "Cite the rubric's named indicators verbatim.",
+        "Never cite specific CVE identifiers."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-2",
+      "capability": "Classify a RHEL UBI major bump as license-aware, even when the technical workload would otherwise be safe-mechanical",
+      "exercises_classifications": ["license-aware"],
+      "instructions_covered": [
+        "RHEL UBI major bumps are license-aware, not safe-mechanical — even when the technical workload would otherwise qualify as safe-mechanical. The licensing precedence dominates.",
+        "Apply rubric categories in precedence order: not-recommended > license-aware > requires-migration > interim-caution > safe-mechanical.",
+        "Cite the rubric's named indicators verbatim."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-3",
+      "capability": "Classify a target on an Ubuntu interim release as interim-caution; recommend the LTS alternative",
+      "exercises_classifications": ["interim-caution"],
+      "instructions_covered": [
+        "Ubuntu interim releases get interim-caution; recommend the LTS alternative instead of a mechanical interim → next-interim bump.",
+        "Cite the rubric's named indicators verbatim."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-4",
+      "capability": "Classify an alpine:edge source as not-recommended; recommend pinning to current Alpine stable",
+      "exercises_classifications": ["not-recommended"],
+      "instructions_covered": [
+        "alpine:edge, debian:sid, debian:unstable, ubuntu:devel sources get not-recommended; recommend pinning to the family's current stable.",
+        "Cite the rubric's named indicators verbatim."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    }
+  ],
+  "coverage_notes": "Five scenarios, one per classification class in the rubric (safe-mechanical / requires-migration / license-aware / interim-caution / not-recommended). The skill's most opinionated rules — precedence ordering (scenario-2 forces license-aware to beat safe-mechanical) and LTS-default preference (scenario-3 forces interim-caution to surface even when both sides are Ubuntu) — get dedicated scenarios. Reminder-class instructions (read-only, summary panel emission) are not given dedicated scenarios since they're general best practices the eval agent would likely follow anyway."
+}

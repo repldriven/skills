@@ -1,0 +1,76 @@
+{
+  "instructions": [
+    {
+      "instruction": "Walk every FROM in the audit JSON, including those whose currency is `current` or `rolling-stable`. The latter become `no-action-needed` entries in advice.md — they are reported, not silently dropped.",
+      "original_snippets": "Every FROM in the audit appears in `advice.md`, even if its only status is \"already current\". Silent omission breaks the user's expectation that the advice covers the whole audit. ... For each finding's `froms` list, identify the entries whose `currency` is one of `one-behind`, `multi-behind`, `non-lts-interim`, `rolling-dev`, or `unsupported`. Ignore `current` and `rolling-stable` entries beyond noting them in the report as `no-action-needed`.",
+      "relevant_when": "Always — applies to every FROM in the audit",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Apply rubric categories in precedence order: not-recommended > license-aware > requires-migration > interim-caution > safe-mechanical. Stop at the first match; one classification per FROM.",
+      "original_snippets": "One classification per FROM. Stop at the first matching rubric category; do not stack labels. If two categories legitimately apply (e.g. a bump is both `license-aware` and `requires-migration`), follow the precedence order: `not-recommended` > `license-aware` > `requires-migration` > `interim-caution` > `safe-mechanical`.",
+      "relevant_when": "When a bump matches multiple rubric categories",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Cite the rubric's named indicators verbatim (or clearly equivalent) when justifying each classification. 'Looks risky' is not an acceptable indicator.",
+      "original_snippets": "Cite named indicators. Every classification must reference the rubric's indicator names verbatim (`System Python major shift`, `RHEL UBI major bump`, etc.). \"Looks risky\" is not an acceptable indicator.",
+      "relevant_when": "Always — applies to every classification in the advice doc",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "RHEL UBI major bumps are license-aware, not safe-mechanical — even when the technical workload (e.g. JVM) would otherwise qualify as safe-mechanical. The licensing precedence dominates.",
+      "original_snippets": "license-aware ... RHEL UBI major bump ... Free `ubi` images redistribute but *base subscription entitlements* differ across majors; downstream rebuild costs (especially if the workload uses `subscription-manager`) need verification. ... precedence order: `not-recommended` > `license-aware` > `requires-migration` > `interim-caution` > `safe-mechanical`.",
+      "relevant_when": "When the bump is from one RHEL UBI major to another",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Ubuntu interim releases (`24.10`, `25.04`, `25.10`) get interim-caution; recommend the LTS alternative (`ubuntu:24.04` etc.) instead of a mechanical interim → next-interim bump.",
+      "original_snippets": "interim-caution ... Ubuntu interim. `after` matches `ubuntu:24.10`, `ubuntu:25.04`, `ubuntu:25.10` (any `.10` / `.04` of an odd year). 9-month support window vs LTS's 5+ years. ... Recommended action: recommend the LTS alternative (`ubuntu:24.04` in place of `ubuntu:25.04`).",
+      "relevant_when": "When the proposed target is an Ubuntu interim release",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "`alpine:edge`, `debian:sid`, `debian:unstable`, `ubuntu:devel` sources get not-recommended; recommend pinning to the family's current stable.",
+      "original_snippets": "not-recommended ... Rolling-dev source. `before` is `alpine:edge`, `debian:sid`, `debian:unstable`, or `ubuntu:devel`. The \"safe\" advice is to pin to the current stable instead of staying on dev — but a mechanical apply would put you back on the same dev branch.",
+      "relevant_when": "When the audit's FROM is on a development-branch tag",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Python-runtime Debian-major bumps are requires-migration when binary wheels are present; the rubric indicators 'System Python major shift', 'OpenSSL major bump', 'glibc symbol-version jump' all apply.",
+      "original_snippets": "requires-migration ... System Python major shift. `python:3.11-slim-bullseye → python:3.11-slim-bookworm` keeps Python 3.11, but the *system* Python under `/usr/bin/python3` changes ... Wheels compiled against the old `libc` may not load. ... OpenSSL major bump. Debian 11 ships OpenSSL 1.1; Debian 12+ ships OpenSSL 3.x.",
+      "relevant_when": "When a Python-runtime image bumps Debian/Ubuntu major and the workload installs binary wheels",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Go-built images (CGO_ENABLED=0) and JVM/Temurin images are safe-mechanical for Debian/RHEL major bumps; cite the specific safe pattern name from the rubric.",
+      "original_snippets": "safe-mechanical ... Specific safe patterns: ... Go-built images moving Debian / RHEL major (the Go binary doesn't link to system libc beyond cgo trivia). ... Eclipse Temurin / OpenJDK moving Debian major (JVM re-resolves system libs).",
+      "relevant_when": "When a build/runtime stage is Go (static-linked) or JVM (Temurin/OpenJDK)",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Never cite specific CVE identifiers unless they appear in the input context. The classification is about base-version risk, not vulnerability-specific applicability.",
+      "original_snippets": "No fabricated CVEs. The advice doc must not name specific CVE identifiers unless they appear in the input context. The classification is about base-version *risk*, not about specific vulnerabilities — pair with a CVE-aware tool for that.",
+      "relevant_when": "Always — applies to every advice entry",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Emit a top-of-doc classification-counts summary panel before the per-FROM sections.",
+      "original_snippets": "Top of the file carries a summary panel: ... Classification counts (n findings): safe-mechanical N, requires-migration N, license-aware N, interim-caution N, not-recommended N, no-action-needed N",
+      "relevant_when": "Always — applies to every advice.md emission",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Emit one artifact (`advice.md`); add `advice.json` only when `--json` is passed.",
+      "original_snippets": "The skill emits one artifact in the working directory: `advice.md` ... If `--json` is passed, also emit: `advice.json` — structured findings, one entry per FROM, with the classification + indicators recorded.",
+      "relevant_when": "At the end of every advice run",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Read-only. Never modify Dockerfiles, charts, or the audit JSON.",
+      "original_snippets": "Read-only. Never modify Dockerfiles, charts, or audit JSON. The output is advice; remediation is the `chart-supply-refresh` tool's job.",
+      "relevant_when": "Always — any advice run",
+      "why_given": "reminder"
+    }
+  ]
+}

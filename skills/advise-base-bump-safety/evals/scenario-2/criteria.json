@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent identifies a RHEL UBI major bump as license-aware (NOT safe-mechanical), citing the licensing / subscription-entitlement indicator even when the immediate technical bump (JVM workload) would otherwise be safe.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is license-aware",
+      "description": "advice.md classifies the bump as license-aware. Critical: not safe-mechanical (which would be wrong because the rubric's precedence has license-aware > safe-mechanical when both apply).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites 'RHEL UBI major bump' indicator",
+      "description": "Indicators section names 'RHEL UBI major bump' (verbatim or clearly equivalent) and explains that base subscription entitlements differ across UBI majors.",
+      "max_score": 20
+    },
+    {
+      "name": "Notes the JVM workload would otherwise be safe-mechanical",
+      "description": "The advice acknowledges (in Notes or in the indicator discussion) that the JVM workload pattern itself is otherwise safe-mechanical (Eclipse Temurin re-resolves system libs), but the licensing precedence takes precedence.",
+      "max_score": 15
+    },
+    {
+      "name": "Recommended action: flag for sign-off",
+      "description": "Recommended action says, in effect, 'flag for vendor-contract sign-off' or 'confirm UBI free-tier acceptance covers the new major' or similar. NOT 'apply mechanically' and NOT 'do not apply'.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "The advice does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}
