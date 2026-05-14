@@ -37,6 +37,23 @@
             install -m 755 tessl-${version}-darwin-arm64 $out/bin/tessl
           '';
         };
+
+        chart-supply-refresh = pkgs.python312Packages.buildPythonApplication {
+          pname = "chart-supply-refresh";
+          version = "0.1.0";
+          src = ./tools/chart-supply-refresh;
+          pyproject = true;
+          build-system = [ pkgs.python312Packages.hatchling ];
+          dependencies = with pkgs.python312Packages; [
+            click
+            jinja2
+            ruamel-yaml
+          ];
+          # Tests live under tests/, but the Nix build runs in a sandbox
+          # without our fixture files installed alongside the package.
+          # Run them in CI / nix develop instead.
+          doCheck = false;
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -58,6 +75,7 @@
             pkgs.openssl
             pkgs.semgrep
             pkgs.skopeo
+            chart-supply-refresh
             tessl
             pkgs.tilt
             pkgs.trivy

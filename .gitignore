@@ -1,1 +1,8 @@
 .direnv/
+
+# Python local-dev artefacts (chart-supply-refresh)
+.venv/
+__pycache__/
+*.egg-info/
+*.pyc
+.pytest_cache/
