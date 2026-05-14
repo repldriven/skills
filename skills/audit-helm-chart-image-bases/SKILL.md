@@ -88,7 +88,7 @@ capability to layer on top.
   OCI URL, or `repo/name[@version]`.
 - **local-owner-prefixes** (optional): image registry/owner
   prefixes that indicate an image is built from a Dockerfile in
-  the current repository (e.g. `ghcr.io/kjothen` for queenswood).
+  the current repository (e.g. `ghcr.io/repldriven` for queenswood).
   When matched, resolution skips upstream lookup and reads the
   local Dockerfile directly.
 - **org-translations** (optional): map of Docker Hub org names to

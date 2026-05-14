@@ -15,8 +15,8 @@ step.
 
 | Audit entry | Image(s) | Owning chart | Hardcoded? |
 | --- | --- | --- | --- |
-| 1 | `ghcr.io/kjothen/<13 services>:0.0.0` (single shared Dockerfile) | queenswood | no |
-| 2 | `ghcr.io/kjothen/bank-app:0.0.0` | queenswood | no |
+| 1 | `ghcr.io/repldriven/<13 services>:0.0.0` (single shared Dockerfile) | queenswood | no |
+| 2 | `ghcr.io/repldriven/bank-app:0.0.0` | queenswood | no |
 | 3 | `alpine/k8s:1.30.14` (5 template occurrences) | queenswood | **yes** |
 | 4 | `foundationdb/fdb-kubernetes-operator:v2.27.0` | fdbOperator | no |
 | 5 | `foundationdb/fdb-kubernetes-monitor:{7.1.67, 7.3.63, 7.4.1}` | fdbOperator | no |
@@ -37,7 +37,7 @@ Chart-level `sources:` snapshot:
 
 | Entry | Signal | Source repo |
 | --- | --- | --- |
-| 1 (services) | `local` (matches `local-owner-prefixes: [ghcr.io/kjothen]`) | this repo — `infra/docker/service/Dockerfile`, confirmed via the Tiltfile docker_build loop |
+| 1 (services) | `local` (matches `local-owner-prefixes: [ghcr.io/repldriven]`) | this repo — `infra/docker/service/Dockerfile`, confirmed via the Tiltfile docker_build loop |
 | 2 (bank-app) | `local` | this repo — `infra/docker/bank-app/Dockerfile` |
 | 3 (`alpine/k8s` hardcoded) | `slug-heuristic` | `github.com/alpine-docker/k8s` |
 | 4 (fdb-operator) | `chart-sources` | `github.com/FoundationDB/fdb-kubernetes-operator` (sources[0], stripped of `/tree/main/charts/fdb-operator`) |
@@ -148,7 +148,7 @@ hold:
 2. Every audit entry carries a `resolution-signal` from the
    closed set: `local`, `chart-sources`, `slug-heuristic`,
    `oci-label`, `base-inferred-from-labels`, `source-unknown`.
-3. The 13 `ghcr.io/kjothen/<svc>` services + `bank-app` all
+3. The 13 `ghcr.io/repldriven/<svc>` services + `bank-app` all
    resolve via the `local` signal and reference at least one
    Dockerfile under `infra/docker/`.
 4. The fdb-operator subchart's operator image resolves via
