@@ -1,0 +1,1 @@
+Build-system-aware path for Dockerfile-less (Nix-built) images

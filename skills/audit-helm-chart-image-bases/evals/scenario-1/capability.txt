@@ -1,0 +1,1 @@
+YAML-aware inventory of container-images AND Crossplane packages

@@ -1,0 +1,1 @@
+Source-unknown fallback to base-inferred-from-labels via inherited image labels

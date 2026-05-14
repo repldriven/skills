@@ -1,0 +1,75 @@
+{
+  "skill": "audit-helm-chart-image-bases",
+  "total_feasible": 5,
+  "scenarios": [
+    {
+      "id": "scenario-0",
+      "capability": "Resolution-cascade + release-tag checkout against a multi-source chart",
+      "exercises_signals": ["chart-sources"],
+      "instructions_covered": [
+        "Try resolution signals in strict order: local → chart-sources → slug-heuristic → oci-label; stop at first hit",
+        "Strip /tree/<branch>/<subpath> suffixes from Chart.yaml sources URLs to get a cloneable repo root",
+        "Check out the release tag matching the image version (try both $TAG and v$TAG) before reading any cloned Dockerfile",
+        "Record `tag-checkout: head-fallback` when no matching tag exists rather than silently reading HEAD",
+        "Report every FROM instruction in a multi-stage Dockerfile, not just the runtime stage",
+        "Record the resolution-signal used for every image in the report",
+        "Include the OS-currency table's last-edited date in the report header",
+        "Emit two artifacts: base-audit-tree.txt (ASCII tree) AND base-audit.json (structured)",
+        "Use shallow clones (--depth=1) and deduplicate clones by repo URL"
+      ],
+      "requires_network": true,
+      "expected_duration_minutes": 4
+    },
+    {
+      "id": "scenario-1",
+      "capability": "YAML-aware inventory of container-images AND Crossplane packages",
+      "exercises_signals": [],
+      "instructions_covered": [
+        "Parse the rendered chart with yaml.safe_load_all (YAML-aware), not a regex sweep over image: lines",
+        "Catch .spec.package on Crossplane Provider/Function/Configuration kinds in addition to image: keys",
+        "Discriminate package: keys by apiVersion + kind, not by naive substring match",
+        "Tag each extracted reference with its kind: container-image vs crossplane-package",
+        "Attribute every extracted image to the source template via `# Source: ` comments"
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-2",
+      "capability": "Build-system-aware path for Dockerfile-less (Nix-built) images",
+      "exercises_signals": [],
+      "instructions_covered": [
+        "When no Dockerfile is found, probe for build-system manifests (flake.nix, .ko.yaml, BUILD.bazel, Jib config) before declaring source-unknown",
+        "For nix-built images, read nixpkgs.url from flake.nix and fromImage argument from dockerTools.buildImage",
+        "Classify `<build-system>-built` images against the build system's own pin (e.g. nixpkgs.url) rather than an OS tag"
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-3",
+      "capability": "Source-unknown fallback to base-inferred-from-labels via inherited image labels",
+      "exercises_signals": ["base-inferred-from-labels"],
+      "instructions_covered": [
+        "Try resolution signals in strict order: local → chart-sources → slug-heuristic → oci-label; stop at first hit",
+        "Fall through to base-inferred-from-labels when all 4 resolution signals fail to find a Dockerfile",
+        "Read inherited image labels (name, version, vendor) via crane config to identify the final-stage base when the Dockerfile is unfindable",
+        "Record the resolution-signal used for every image in the report"
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "scenario-4",
+      "capability": "Classify rolling-dev vs rolling-stable vs LTS interim correctly",
+      "exercises_signals": [],
+      "instructions_covered": [
+        "Distinguish rolling-stable from rolling-dev — never conflate them",
+        "Compare Ubuntu LTS and interim releases as separate tracks; classify interim releases as non-lts-interim, not one-behind"
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    }
+  ],
+  "coverage_notes": "Five scenarios exercise the skill's preference-class instructions (resolution-signal cascade, release-tag checkout, rolling-stable vs rolling-dev distinction, Ubuntu LTS vs interim track separation) and the new-knowledge instructions (Crossplane package extraction, base-inferred-from-labels fallback, build-system-aware path for Dockerfile-less projects). Reminder-class instructions (read-only, shallow clones) are not given dedicated scenarios since they're general best practices the eval agent would likely follow anyway."
+}

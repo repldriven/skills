@@ -1,0 +1,66 @@
+{
+  "context": "Tests whether the agent distinguishes rolling-stable (distroless, Chainguard, vendor-:latest) from rolling-dev (alpine:edge, debian:sid, ubuntu:devel) — never conflating them — and whether Ubuntu interim releases land in non-lts-interim rather than one-behind LTS.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "alpine:edge → rolling-dev",
+      "description": "alpine:edge classified as status: rolling-dev (NOT rolling-stable, NOT one-behind, NOT current). os_family: alpine.",
+      "max_score": 15
+    },
+    {
+      "name": "debian:sid → rolling-dev",
+      "description": "debian:sid classified as status: rolling-dev. os_family: debian.",
+      "max_score": 10
+    },
+    {
+      "name": "distroless → rolling-stable",
+      "description": "gcr.io/distroless/static-debian13:nonroot classified as status: rolling-stable. os_family: distroless.",
+      "max_score": 15
+    },
+    {
+      "name": "Chainguard :latest → rolling-stable",
+      "description": "cgr.dev/chainguard/static:latest classified as status: rolling-stable (NOT rolling-dev). The :latest tag of a vendor-managed minimal base is rolling-stable.",
+      "max_score": 10
+    },
+    {
+      "name": "ubuntu:25.10 → non-lts-interim",
+      "description": "ubuntu:25.10 classified as os_family: ubuntu-interim and status: non-lts-interim (NOT one-behind LTS, NOT current LTS).",
+      "max_score": 15
+    },
+    {
+      "name": "ubuntu:22.04 → one-behind LTS",
+      "description": "ubuntu:22.04 classified as os_family: ubuntu-lts and status: one-behind (jammy is previous LTS; noble is current).",
+      "max_score": 5
+    },
+    {
+      "name": "ubuntu:24.04 → current LTS",
+      "description": "ubuntu:24.04 classified as os_family: ubuntu-lts and status: current.",
+      "max_score": 5
+    },
+    {
+      "name": "debian:bookworm → one-behind",
+      "description": "debian:bookworm-slim classified as os_family: debian, os_version: 12, status: one-behind.",
+      "max_score": 5
+    },
+    {
+      "name": "debian:trixie → current",
+      "description": "debian:trixie-slim classified as os_family: debian, os_version: 13, status: current.",
+      "max_score": 5
+    },
+    {
+      "name": "alpine:3.22 → one-behind",
+      "description": "alpine:3.22 classified as os_family: alpine, os_version: 3.22, status: one-behind.",
+      "max_score": 5
+    },
+    {
+      "name": "scratch → none / null",
+      "description": "FROM scratch classified as os_family: none (or null) with no os_version. Status may be null or n/a.",
+      "max_score": 5
+    },
+    {
+      "name": "No 'rolling' catch-all bucket",
+      "description": "The output does NOT use a generic 'rolling' status value (without -dev or -stable suffix). The two classes are kept distinct everywhere.",
+      "max_score": 5
+    }
+  ]
+}

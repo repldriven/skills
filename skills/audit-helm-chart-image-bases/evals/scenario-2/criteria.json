@@ -1,0 +1,41 @@
+{
+  "context": "Tests whether the agent uses the build-system-aware path for Dockerfile-less projects, correctly identifies Nix dockerTools as the build system, reads the nixpkgs.url pin from flake.nix, and classifies the resulting NixOS pin against the currency table.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "audit-entry.json produced",
+      "description": "Working directory contains a file named audit-entry.json that parses as valid JSON.",
+      "max_score": 10
+    },
+    {
+      "name": "dockerfile field indicates no-Dockerfile",
+      "description": "The dockerfile field's value indicates a build-system-aware outcome (nix-built, build-system-built, or equivalent) — NOT a Dockerfile path and NOT source-unknown / dockerfile-ambiguous / null.",
+      "max_score": 20
+    },
+    {
+      "name": "build_system identifies Nix dockerTools",
+      "description": "The build_system field names Nix dockerTools (or Nix flake / nix-built / similar) as the build paradigm.",
+      "max_score": 15
+    },
+    {
+      "name": "nixpkgs.url pin extracted",
+      "description": "The base_pin field carries the value nixos-25.11 (matching the nixpkgs.url input in flake.nix), not the unstable channel and not a Dockerfile FROM-style value.",
+      "max_score": 25
+    },
+    {
+      "name": "Classified against NixOS axis",
+      "description": "The status field classifies nixos-25.11 as 'current' against the supplied NixOS currency lookup (25.11 = current stable per the task spec).",
+      "max_score": 15
+    },
+    {
+      "name": "Evidence cites flake.nix",
+      "description": "The evidence field references flake.nix (or nix/build.nix) as the source of the pin — not a hallucinated path like Dockerfile or values.yaml.",
+      "max_score": 10
+    },
+    {
+      "name": "Doesn't fabricate a Dockerfile",
+      "description": "The output does not claim to have read a Dockerfile that doesn't exist; no FROM lines from a fabricated Dockerfile appear in the output.",
+      "max_score": 5
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "instructions": [
+    {
+      "instruction": "Parse the rendered chart with yaml.safe_load_all (YAML-aware), not a regex sweep over image: lines",
+      "original_snippets": "Use a YAML-aware parse, not a regex sweep. `helm template` emits multi-document YAML; `yaml.safe_load_all` walks it cleanly... python3 - <<'PY' ... for i, doc in enumerate(yaml.safe_load_all(text)):",
+      "relevant_when": "When extracting images from any rendered Helm chart output",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Catch .spec.package on Crossplane Provider/Function/Configuration kinds in addition to image: keys",
+      "original_snippets": "including Crossplane package references (which use `package:` keys on `pkg.crossplane.io` resources, not `image:`) ... CROSSPLANE_PACKAGE_KINDS = {'Provider', 'Function', 'Configuration'} ... if api.startswith('pkg.crossplane.io/') and kind in CROSSPLANE_PACKAGE_KINDS:",
+      "relevant_when": "When the chart deploys Crossplane Providers, Functions, or Configurations (xp-mp planes, GitOps bootstraps)",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Discriminate package: keys by apiVersion + kind, not by naive substring match (to avoid false positives like npm package.json in a ConfigMap)",
+      "original_snippets": "lets you discriminate by `kind` / `apiVersion` so Crossplane packages don't get confused with unrelated `package:` keys elsewhere (npm `package.json` embedded in a ConfigMap, etc.)",
+      "relevant_when": "When auditing charts that emit YAML containing varied package: keys",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Tag each extracted reference with its kind: container-image vs crossplane-package",
+      "original_snippets": "Crossplane packages are audited identically to container images from step 2 onward — they're OCI artifacts in disguise — but the kind column lets the report distinguish them",
+      "relevant_when": "Always — every emitted artifact must carry a kind tag",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Attribute every extracted image to the source template via `# Source: ` comments in the helm-rendered output",
+      "original_snippets": "Attribute each to the template that produced it via the `# Source: …` comments helm emits. ... src_by_doc.append(first[len('# Source: '):] if first else current)",
+      "relevant_when": "Always during the inventory step",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Try resolution signals in strict order: local → chart-sources → slug-heuristic → oci-label; stop at first hit",
+      "original_snippets": "Try resolution signals in this order — stop at the first hit: 1. **Local Dockerfile match.** ... 2. **Chart.yaml `sources:`** ... 3. **Slug heuristic with canonical-org translation.** ... 4. **OCI image labels**",
+      "relevant_when": "When resolving any image to a source repository",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Strip /tree/<branch>/<subpath> suffixes from Chart.yaml sources URLs to get a cloneable repo root",
+      "original_snippets": "First URL is typically the image repo. Strip any `/tree/<branch>/<subpath>` suffix to get the repo root that can be cloned.",
+      "relevant_when": "When the chart's sources field points at a subdirectory of a repo",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Apply canonical-org translations for slug-heuristic (apachepulsar → apache/pulsar; foundationdb → FoundationDB)",
+      "original_snippets": "Apply known translations from the `org-translations` map (Docker Hub orgs often diverge from their GitHub orgs, e.g. `apachepulsar` → `apache/pulsar`; `foundationdb` → `FoundationDB`; case matters on GitHub).",
+      "relevant_when": "When falling back to slug-heuristic resolution",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Fall through to base-inferred-from-labels when all 4 resolution signals fail to find a Dockerfile",
+      "original_snippets": "If none of the four signals above resolves a Dockerfile, the image's *source repo* is `source-unknown` — but step 5 has a fallback that can still identify the **final-stage base** via inherited labels",
+      "relevant_when": "When the source repo is private / 404 / not on GitHub",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Read inherited image labels (name, version, vendor) via crane config to identify the final-stage base when the Dockerfile is unfindable",
+      "original_snippets": "`crane config <image>` surfaces the *final* image's labels, which often inherit identifying labels from the base image — `name`, `version`, `vendor`, `org.opencontainers.image.vendor` — without the image setting those labels itself.",
+      "relevant_when": "When source-unknown or dockerfile-ambiguous and base-inferred-from-labels is the fallback",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Record the resolution-signal used (from the closed set local | chart-sources | slug-heuristic | oci-label | base-inferred-from-labels | source-unknown) for every image in the report",
+      "original_snippets": "Record the signal used (`local`, `chart-sources`, `slug-heuristic`, `oci-label`, `base-inferred-from-labels`, `source-unknown`) for every image in the report.",
+      "relevant_when": "Always — applies to every entry in the output report",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Check out the release tag matching the image version (try both $TAG and v$TAG) before reading any cloned Dockerfile",
+      "original_snippets": "**HEAD ≠ release.** A clone's HEAD tracks the upstream's `main` branch; the Dockerfile there may differ substantively from the one used to build the *specific* image tag the chart pulls. ... for tag in \"$IMAGE_VERSION\" \"v$IMAGE_VERSION\"; do git -C \"$REPO_DIR\" fetch --depth=1 origin \"tag\" \"$tag\"",
+      "relevant_when": "Whenever a Dockerfile is being read from a cloned upstream repo",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Record `tag-checkout: head-fallback` when no matching tag exists rather than silently reading HEAD",
+      "original_snippets": "If no tag matches (e.g. the image version doesn't track a Git tag — common for vendor images whose tags are `build-<sha>`-shaped), stay on HEAD and record `tag-checkout: head-fallback` in the report so the user knows the FROMs may not match the released image.",
+      "relevant_when": "When the image version doesn't correspond to a Git tag in the source repo",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "When no Dockerfile is found, probe for build-system manifests (flake.nix, .ko.yaml, BUILD.bazel, Jib config) before declaring source-unknown",
+      "original_snippets": "**No Dockerfile at all? Look for a build-system manifest instead.** Some upstream projects don't ship a Dockerfile — they build container images directly via Nix `dockerTools`, Google's `ko`, Bazel `rules_docker` / `rules_oci`, or Jib (Java).",
+      "relevant_when": "When the cloned repo has no Dockerfile (common for Crossplane core, modern Go projects)",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "For nix-built images, read nixpkgs.url from flake.nix and fromImage argument from dockerTools.buildImage (if present)",
+      "original_snippets": "**Nix `dockerTools`** — read the `nixpkgs.url` flake input (e.g. `nixos-25.11`) and any `fromImage` argument to `dockerTools.buildImage`. If `fromImage` is absent, the image is assembled from Nix packages with no traditional base; record the nixpkgs pin as the closest analog of an OS version",
+      "relevant_when": "When auditing a nix-built image (no Dockerfile present)",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Mark Dockerfile candidates as dockerfile-ambiguous and list ALL candidates rather than arbitrarily picking one",
+      "original_snippets": "**Multiple candidates with no clean match.** Report all candidates and flag the image as `dockerfile-ambiguous`. Do not pick one arbitrarily.",
+      "relevant_when": "When a source repo contains multiple Dockerfiles with no clean path match to the image name",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Report every FROM instruction in a multi-stage Dockerfile, not just the runtime stage",
+      "original_snippets": "Multi-stage Dockerfiles report all FROMs, not just the final stage. A build stage on a stale base is still a stale base in the dependency graph.",
+      "relevant_when": "When parsing any multi-stage Dockerfile",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Resolve ARG-based FROM bases using in-file ARG = <default> declarations; do not invent values for ARGs without defaults",
+      "original_snippets": "Use the in-file `ARG ... = <default>` declarations as the source of truth — do not invent values for ARGs with no default. ... If `ARG BASE_IMAGE` appears without `= <default>`, the FROM resolves to `arg-undefined` and that entry is flagged in the report — the skill does not pick a value.",
+      "relevant_when": "When the Dockerfile uses ARG-based image references",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Distinguish rolling-stable (distroless, Chainguard, vendor-:latest) from rolling-dev (alpine:edge, debian:sid, ubuntu:devel) — never conflate them",
+      "original_snippets": "**Distinguish `rolling-stable` from `rolling-dev`.** Both are moving targets, but they carry different risk profiles: ... *rolling-stable* — distroless, Chainguard, `:latest` ... *rolling-dev* — `alpine:edge`, `debian:sid`, `debian:unstable`, `ubuntu:devel`. ... A scarier baseline than \"one-behind stable\"",
+      "relevant_when": "When classifying any image that uses a moving-target tag",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Compare Ubuntu LTS and interim releases as separate tracks; classify interim releases as non-lts-interim, not one-behind",
+      "original_snippets": "**Ubuntu LTS vs interim — two separate tracks.** ... only the `.04` of every even year (`20.04`, `22.04`, `24.04`, `26.04`) is an LTS with 5+ years of standard support. Interim releases get 9 months of support. The currency table compares to the latest LTS; interim releases land in their own classification (`non-lts-interim`)",
+      "relevant_when": "When classifying any Ubuntu-based image",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Include the OS-currency table's last-edited date in the report header; flag table-stale if more than ~6 months old at run time",
+      "original_snippets": "If the table itself looks more than ~6 months stale at run time, the report's header carries a `table-stale` warning. ... The table's last-edited date is included in the report header.",
+      "relevant_when": "Always — applies to every report header",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Emit two artifacts: base-audit-tree.txt (ASCII tree) AND base-audit.json (structured)",
+      "original_snippets": "The skill emits two artifacts in the working directory: 1. `base-audit-tree.txt` — ASCII tree, suitable for paste into a PR description or a SECURITY.md follow-up. 2. `base-audit.json` — structured findings",
+      "relevant_when": "At the end of every audit run",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Audit is read-only — never modify charts, Dockerfiles, or upstream repos",
+      "original_snippets": "**Read-only.** Never modify charts, Dockerfiles, or upstream repos. The skill is an audit, not a remediation.",
+      "relevant_when": "Always — any audit run",
+      "why_given": "reminder"
+    },
+    {
+      "instruction": "Use shallow clones (--depth=1) and deduplicate clones by repo URL",
+      "original_snippets": "git clone --depth=1 \"$url\" \"/tmp/chart-base-audit/$dir\" ... Deduplicate by repo URL so a chart with 10 images from the same repo only clones once.",
+      "relevant_when": "When cloning upstream source repositories during step 3",
+      "why_given": "reminder"
+    },
+    {
+      "instruction": "Classify `<build-system>-built` images against the build system's own pin (e.g. nixpkgs.url) rather than an OS tag",
+      "original_snippets": "For `<build-system>-built` images, the comparison runs against the build system's pin instead of an OS tag — e.g. a `nix-built` image with `nixpkgs.url = nixos-25.11` is classified `current` (NixOS 25.11 is the current stable)",
+      "relevant_when": "When classifying a Dockerfile-less (build-system-built) image",
+      "why_given": "particular preference"
+    }
+  ]
+}

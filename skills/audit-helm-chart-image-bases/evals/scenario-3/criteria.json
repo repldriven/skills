@@ -1,0 +1,41 @@
+{
+  "context": "Tests whether the agent walks the full 4-signal resolution cascade, falls through to base-inferred-from-labels when all four fail, correctly identifies the base from inherited image labels, and refuses to invent a source URL.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "audit-entry.json produced",
+      "description": "Working directory contains a file named audit-entry.json that parses as valid JSON.",
+      "max_score": 10
+    },
+    {
+      "name": "Resolution signal recorded",
+      "description": "The resolution_signal field is base-inferred-from-labels (or a clearly-equivalent value). It is NOT silently filled with chart-sources, slug-heuristic, or oci-label — none of which actually resolved.",
+      "max_score": 20
+    },
+    {
+      "name": "Signals tried list complete",
+      "description": "The signals_tried list records all four prior probes (local, chart-sources, slug-heuristic, oci-label) with their failure outcomes — proving the cascade was walked in order rather than skipped to the fallback directly.",
+      "max_score": 15
+    },
+    {
+      "name": "Base identified from labels",
+      "description": "base_inferred is set to rockylinux:9-minimal (or rockylinux 9-minimal / equivalent), derived from the name + version labels in crane-config.json.",
+      "max_score": 20
+    },
+    {
+      "name": "OS classification correct",
+      "description": "base_os_family is rhel-family (or rhel_family / RHEL-family) and base_os_version is 9. Rocky Linux is correctly recognised as a RHEL-family distribution.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated source URL",
+      "description": "The output does NOT claim to have cloned or read a Dockerfile from a hallucinated source URL. It correctly records that no Dockerfile was available.",
+      "max_score": 10
+    },
+    {
+      "name": "No false-positive label use",
+      "description": "The agent uses the BASE-image labels (name=rockylinux, version=9-minimal) — NOT the org.opencontainers.image.url label which points at rocky-linux/rocky-toolbox-images (the base's source repo, not the fdb-monitor's).",
+      "max_score": 10
+    }
+  ]
+}

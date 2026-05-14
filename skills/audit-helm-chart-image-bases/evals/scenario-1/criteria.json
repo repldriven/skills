@@ -1,0 +1,41 @@
+{
+  "context": "Tests whether the agent uses a YAML-aware inventory (not regex grep) that catches both image: keys and .spec.package on Crossplane Provider/Function/Configuration kinds, while correctly ignoring unrelated package: occurrences (like npm package.json in a ConfigMap data block).",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "All container-images present",
+      "description": "inventory.json contains entries (kind: container-image) for crossplane v2.2.1, argocd v3.4.2, and redis 8.2.3-alpine — three distinct container images from the rendered manifest.",
+      "max_score": 15
+    },
+    {
+      "name": "Both Crossplane packages present",
+      "description": "inventory.json contains entries (kind: crossplane-package) for provider-gcp-container v2.5.1 AND function-patch-and-transform v0.8.2.",
+      "max_score": 20
+    },
+    {
+      "name": "Provider vs Function both caught",
+      "description": "Crossplane extraction correctly handles Function CRs as well as Provider CRs (not just one kind). Function-patch-and-transform must appear with kind: crossplane-package.",
+      "max_score": 15
+    },
+    {
+      "name": "Kind tag on every entry",
+      "description": "Every object in inventory.json has a kind field whose value is one of {container-image, crossplane-package}. No untagged entries.",
+      "max_score": 10
+    },
+    {
+      "name": "ConfigMap package.json NOT caught",
+      "description": "The ConfigMap's data.package.json (an npm-style metadata block) must NOT appear in inventory.json as a Crossplane package. Catching it would indicate a naive regex on package: rather than YAML-aware discrimination by apiVersion+kind.",
+      "max_score": 20
+    },
+    {
+      "name": "Description-block 'package:' NOT caught",
+      "description": "The ConfigMap data.description multi-line block contains the literal string 'package:' as English prose. This must not produce a phantom entry in inventory.json.",
+      "max_score": 10
+    },
+    {
+      "name": "source_template attribution",
+      "description": "Each entry's source_template field carries the value from the # Source: comment of the document it came from (e.g. 'xp-mp/templates/crossplane-providers.yaml' for the Provider/Function entries).",
+      "max_score": 10
+    }
+  ]
+}

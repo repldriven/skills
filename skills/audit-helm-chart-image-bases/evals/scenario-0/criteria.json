@@ -1,0 +1,46 @@
+{
+  "context": "Tests whether the agent walks chart→subchart-sources→clone→tag-checkout→Dockerfile correctly, reports all FROMs from multi-stage builds, and records the resolution signal and currency-table date in the output.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Both output artifacts present",
+      "description": "Working directory contains both base-audit-tree.txt AND base-audit.json at the end of the run.",
+      "max_score": 10
+    },
+    {
+      "name": "chart-sources signal recorded",
+      "description": "base-audit.json records the resolution-signal for the fdb-kubernetes-operator image as chart-sources (sourced from the subchart's Chart.yaml sources field), not slug-heuristic or oci-label.",
+      "max_score": 15
+    },
+    {
+      "name": "Stripped /tree/ suffix from clone URL",
+      "description": "The cloned repo URL is github.com/FoundationDB/fdb-kubernetes-operator (the repo root), not the chart-sources URL verbatim (which ends in /tree/main/charts/fdb-operator).",
+      "max_score": 10
+    },
+    {
+      "name": "Release tag checked out",
+      "description": "The report indicates the Dockerfile was read from the v2.27.0 tag, not from HEAD. Look for a tag-checkout marker in base-audit.json or a textual hint in base-audit-tree.txt.",
+      "max_score": 15
+    },
+    {
+      "name": "All multi-stage FROMs reported",
+      "description": "The output includes BOTH FROM stages of the operator Dockerfile (the golang:1.x builder AND the rockylinux/rockylinux:9.x-minimal runtime). Reporting only the runtime FROM is a fail.",
+      "max_score": 15
+    },
+    {
+      "name": "OS classification correct",
+      "description": "The Dockerfile's two FROMs are classified against the currency table: the build stage as Debian (bookworm = one-behind trixie) and the runtime as RHEL-family 9 (current).",
+      "max_score": 15
+    },
+    {
+      "name": "Currency-table date in header",
+      "description": "The report header (in either artifact) includes the OS-currency table's last-edited date.",
+      "max_score": 10
+    },
+    {
+      "name": "No silent HEAD fallback",
+      "description": "The report does NOT silently report HEAD's Dockerfile when the v2.27.0 tag exists; if the agent had to fall back to HEAD it would be marked tag-checkout: head-fallback with a reason.",
+      "max_score": 10
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "repldriven/skills",
+  "version": "0.1.0",
+  "summary": "Platform skills authored by repldriven. Helm chart base-image audit; future tile work (remediation, provider auditing, etc.) lands as sibling skills.",
+  "private": true,
+  "skills": {
+    "audit-helm-chart-image-bases": {
+      "path": "skills/audit-helm-chart-image-bases/SKILL.md"
+    }
+  }
+}
