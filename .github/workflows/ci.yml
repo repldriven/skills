@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Python project
+        id: detect
+        # Branches without a Polylith workspace (e.g. doc-only / skill-only
+        # branches) skip the Python steps. Avoids forcing every branch to
+        # ship a pyproject.toml just to satisfy CI.
+        run: |
+          if [ -f pyproject.toml ] && [ -d test ]; then
+            echo "has_python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.detect.outputs.has_python == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        if: steps.detect.outputs.has_python == 'true'
+        run: pipx install poetry
+
+      - name: Cache Poetry virtualenv
+        if: steps.detect.outputs.has_python == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.detect.outputs.has_python == 'true'
+        run: poetry install --no-interaction
+
+      - name: Run pytest
+        if: steps.detect.outputs.has_python == 'true'
+        run: poetry run pytest -q
+
+      - name: No Python project on this branch
+        if: steps.detect.outputs.has_python != 'true'
+        run: echo "Branch has no pyproject.toml + test/ — CI is a no-op pass."
