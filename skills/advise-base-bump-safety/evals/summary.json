@@ -28,11 +28,12 @@
     },
     {
       "id": "rhel-ubi-license-aware",
-      "capability": "Classify a RHEL UBI major bump as license-aware, even when the technical workload would otherwise be safe-mechanical",
+      "capability": "Classify a RHEL UBI major bump as license-aware AND lead the recommended action with a family-escape (Fedora / Rocky / distroless), not the legalistic 'get sign-off + bump within UBI' path",
       "exercises_classifications": ["license-aware"],
       "instructions_covered": [
         "RHEL UBI major bumps are license-aware, not safe-mechanical — even when the technical workload would otherwise qualify as safe-mechanical. The licensing precedence dominates.",
         "Apply rubric categories in precedence order: not-recommended > license-aware > requires-migration > interim-caution > safe-mechanical.",
+        "Lead with family-escape: for license-aware bumps, recommend a license-free alternative (Fedora, Rocky/Alma, distroless, Wolfi) as primary; retain in-family + sign-off only as a secondary path for users with hard constraints.",
         "Cite the rubric's named indicators verbatim."
       ],
       "requires_network": false,
