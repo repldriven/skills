@@ -37,23 +37,6 @@
             install -m 755 tessl-${version}-darwin-arm64 $out/bin/tessl
           '';
         };
-
-        chart-supply-refresh = pkgs.python312Packages.buildPythonApplication {
-          pname = "chart-supply-refresh";
-          version = "0.1.0";
-          src = ./.;
-          pyproject = true;
-          build-system = [ pkgs.python312Packages.poetry-core ];
-          dependencies = with pkgs.python312Packages; [
-            click
-            jinja2
-            ruamel-yaml
-          ];
-          # Tests live under test/ (Polylith mirror layout); the Nix
-          # sandbox doesn't see fixtures alongside the installed
-          # package, so we run pytest in dev shell / CI, not here.
-          doCheck = false;
-        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -75,8 +58,6 @@
             pkgs.openssl
             pkgs.semgrep
             pkgs.skopeo
-            chart-supply-refresh
-            pkgs.poetry
             tessl
             pkgs.tilt
             pkgs.trivy

@@ -5,49 +5,19 @@ on:
   push:
     branches: [main]
 
+# Skills repo is markdown-driven; no programmatic tests yet. This
+# placeholder workflow exists so PR status checks have something to
+# report. Replace with `tessl tile lint` once that's CI-friendly.
 jobs:
-  test:
+  noop:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Detect Python project
-        id: detect
-        # Branches without a Polylith workspace (e.g. doc-only / skill-only
-        # branches) skip the Python steps. Avoids forcing every branch to
-        # ship a pyproject.toml just to satisfy CI.
+      - name: Confirm tile layout
         run: |
-          if [ -f pyproject.toml ] && [ -d test ]; then
-            echo "has_python=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_python=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: actions/setup-python@v5
-        if: steps.detect.outputs.has_python == 'true'
-        with:
-          python-version: '3.12'
-
-      - name: Install Poetry
-        if: steps.detect.outputs.has_python == 'true'
-        run: pipx install poetry
-
-      - name: Cache Poetry virtualenv
-        if: steps.detect.outputs.has_python == 'true'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
-
-      - name: Install dependencies
-        if: steps.detect.outputs.has_python == 'true'
-        run: poetry install --no-interaction
-
-      - name: Run pytest
-        if: steps.detect.outputs.has_python == 'true'
-        run: poetry run pytest -q
-
-      - name: No Python project on this branch
-        if: steps.detect.outputs.has_python != 'true'
-        run: echo "Branch has no pyproject.toml + test/ — CI is a no-op pass."
+          test -d skills           || { echo "missing skills/ dir"; exit 1; }
+          test -f tile.json        || { echo "missing tile.json"; exit 1; }
+          for d in skills/*/; do
+            test -f "$d/SKILL.md"  || { echo "missing $d/SKILL.md"; exit 1; }
+          done
+          echo "tile layout looks valid: $(ls -d skills/*/ | wc -l) skill(s)"

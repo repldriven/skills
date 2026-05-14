@@ -1,8 +1,11 @@
 # repldriven/skills
 
 Tessl tile of platform skills authored under the
-[`repldriven`](https://github.com/repldriven) GitHub org, plus
-companion deterministic tools.
+[`repldriven`](https://github.com/repldriven) GitHub org.
+
+One tile, many skills. Skills accumulate under `skills/`; each
+ships its own `SKILL.md`, `examples/`, and `evals/` per the
+Tessl convention.
 
 ## Skills
 
@@ -14,33 +17,18 @@ companion deterministic tools.
   for Dockerfile-less projects) and reports outdated base OS
   releases.
 
-## Tools
+## Companion tools
 
-- **chart-supply-refresh** — given an `audit-helm-chart-image-bases`
-  report, fork the chart's stale-base Dockerfiles onto current OS
-  images and emit a GitHub Actions cron workflow that rebuilds
-  them. Pure deterministic CLI; no LLM in the loop. Organised as
-  a Polylith workspace under `components/` + `bases/` (Poetry).
-
-## Layout
-
-```
-components/chart_supply_refresh/<brick>/core.py    chart-supply-refresh components
-bases/chart_supply_refresh/cli/core.py             CLI base composing the components
-test/components/...  test/bases/...                tests mirroring brick layout
-skills/<skill-name>/                               Tessl skills (markdown-driven)
-pyproject.toml                                     Poetry workspace + Polylith bricks
-workspace.toml                                     Polylith workspace config
-flake.nix                                          Nix dev shell (helm/crane/tessl/poetry/...)
-```
+Deterministic command-line tooling that consumes skill outputs
+lives in [`repldriven/tools`](https://github.com/repldriven/tools).
+The `chart-supply-refresh` CLI there consumes the JSON output of
+`audit-helm-chart-image-bases` and forks stale-base Dockerfiles
+onto current OS images.
 
 ## Develop
 
 ```bash
-nix develop           # enters dev shell with poetry, helm, crane, tessl, ...
-poetry install        # install deps + register components
-poetry run pytest     # 36 tests
-poetry run chart-supply-refresh --help
+nix develop           # enters dev shell with tessl, helm, crane, kubectl, ...
 ```
 
 ## Tile evaluation
