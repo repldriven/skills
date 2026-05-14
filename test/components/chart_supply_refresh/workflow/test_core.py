@@ -1,7 +1,7 @@
 import pytest
 import yaml
 
-from chart_supply_refresh.workflow import MatrixEntry, render
+from chart_supply_refresh.workflow.core import MatrixEntry, render
 
 
 def _basic_matrix():

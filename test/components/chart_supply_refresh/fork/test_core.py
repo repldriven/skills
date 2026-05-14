@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from chart_supply_refresh.audit import Finding, FromEntry
-from chart_supply_refresh.bumps import BumpDecision
-from chart_supply_refresh.fork import apply_bumps
+from chart_supply_refresh.audit.core import Finding, FromEntry
+from chart_supply_refresh.bumps.core import BumpDecision
+from chart_supply_refresh.fork.core import apply_bumps
 
 
 def _finding(image, froms_data, dockerfile="Dockerfile", source_repo="https://github.com/x/y"):

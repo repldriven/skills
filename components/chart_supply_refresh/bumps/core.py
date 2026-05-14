@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from chart_supply_refresh.audit import FromEntry
+from chart_supply_refresh.audit.core import FromEntry
 
 
 # Currency table: (os-family, current-version) -> latest tag fragment to bump to.

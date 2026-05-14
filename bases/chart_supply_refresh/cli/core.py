@@ -13,12 +13,15 @@ from pathlib import Path
 
 import click
 
-from chart_supply_refresh import __version__
-from chart_supply_refresh.audit import AuditReport, Finding, load as load_audit
-from chart_supply_refresh.bumps import BumpDecision, decide
-from chart_supply_refresh.fork import apply_bumps, clone_and_checkout
-from chart_supply_refresh.plan import classify, emit as emit_plan
-from chart_supply_refresh.workflow import MatrixEntry, render as render_workflow
+from chart_supply_refresh.audit.core import AuditReport, Finding, load as load_audit
+from chart_supply_refresh.bumps.core import BumpDecision, decide
+from chart_supply_refresh.fork.core import apply_bumps, clone_and_checkout
+from chart_supply_refresh.plan.core import classify, emit as emit_plan
+from chart_supply_refresh.workflow.core import MatrixEntry, render as render_workflow
+
+# Version pin lives here rather than in a workspace-level __init__ because
+# the brick layout has no shared parent __init__.py (PEP 420 namespace).
+__version__ = "0.1.0"
 
 
 @click.command()

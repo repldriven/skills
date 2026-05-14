@@ -41,17 +41,17 @@
         chart-supply-refresh = pkgs.python312Packages.buildPythonApplication {
           pname = "chart-supply-refresh";
           version = "0.1.0";
-          src = ./tools/chart-supply-refresh;
+          src = ./.;
           pyproject = true;
-          build-system = [ pkgs.python312Packages.hatchling ];
+          build-system = [ pkgs.python312Packages.poetry-core ];
           dependencies = with pkgs.python312Packages; [
             click
             jinja2
             ruamel-yaml
           ];
-          # Tests live under tests/, but the Nix build runs in a sandbox
-          # without our fixture files installed alongside the package.
-          # Run them in CI / nix develop instead.
+          # Tests live under test/ (Polylith mirror layout); the Nix
+          # sandbox doesn't see fixtures alongside the installed
+          # package, so we run pytest in dev shell / CI, not here.
           doCheck = false;
         };
       in
@@ -76,6 +76,7 @@
             pkgs.semgrep
             pkgs.skopeo
             chart-supply-refresh
+            pkgs.poetry
             tessl
             pkgs.tilt
             pkgs.trivy

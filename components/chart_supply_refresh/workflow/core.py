@@ -51,7 +51,7 @@ def render(
     registry_host = target_registry.split("/", 1)[0]
 
     env = Environment(
-        loader=FileSystemLoader(str(files("chart_supply_refresh").joinpath("templates"))),
+        loader=FileSystemLoader(str(files("chart_supply_refresh.workflow").joinpath("templates"))),
         keep_trailing_newline=True,
         undefined=StrictUndefined,
     )

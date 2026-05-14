@@ -1,5 +1,5 @@
-from chart_supply_refresh.audit import FromEntry
-from chart_supply_refresh.bumps import decide
+from chart_supply_refresh.audit.core import FromEntry
+from chart_supply_refresh.bumps.core import decide
 
 
 def _fe(from_, family, version, currency="one-behind", stage="build"):

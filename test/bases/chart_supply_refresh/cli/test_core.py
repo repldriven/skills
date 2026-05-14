@@ -14,12 +14,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-FIXTURES = Path(__file__).parent / "fixtures"
+# Walk up from test/bases/chart_supply_refresh/cli/test_core.py to test/.
+FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
 
 
 def _run_cli(output_dir: Path, **overrides) -> subprocess.CompletedProcess:
     cmd = [
-        sys.executable, "-m", "chart_supply_refresh.cli",
+        sys.executable, "-m", "chart_supply_refresh.cli.core",
         "--chart", str(FIXTURES / "chart"),
         "--audit", str(FIXTURES / "audit-queenswood.json"),
         "--target-registry", overrides.get("target_registry", "ghcr.io/repldriven"),

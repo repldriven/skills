@@ -18,8 +18,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from chart_supply_refresh.audit import Finding, FromEntry
-from chart_supply_refresh.bumps import BumpDecision
+from chart_supply_refresh.audit.core import Finding, FromEntry
+from chart_supply_refresh.bumps.core import BumpDecision
 
 
 # Matches a Dockerfile FROM line, with optional --platform flag and AS clause.

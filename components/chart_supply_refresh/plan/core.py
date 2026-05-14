@@ -15,8 +15,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from chart_supply_refresh.audit import AuditReport, Finding, SENTINEL_DOCKERFILES
-from chart_supply_refresh.bumps import BumpDecision
+from chart_supply_refresh.audit.core import AuditReport, Finding, SENTINEL_DOCKERFILES
+from chart_supply_refresh.bumps.core import BumpDecision
 
 
 def classify(finding: Finding, decisions: list[BumpDecision]) -> str:
