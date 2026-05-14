@@ -1,5 +1,5 @@
 {
-  "context": "Tests whether the agent identifies a RHEL UBI major bump as license-aware (NOT safe-mechanical), citing the licensing / subscription-entitlement indicator even when the immediate technical bump (JVM workload) would otherwise be safe.",
+  "context": "Tests whether the agent identifies a RHEL UBI major bump as license-aware AND leads its recommended action with a family-escape (Fedora / Rocky / Alma / distroless / Wolfi) rather than the legalistic 'get sign-off and bump within UBI' path. The license-aware classification alone isn't enough — the advice must steer toward escaping the licensed family by default, with in-family + sign-off retained only as a secondary path for users with hard constraints.",
   "type": "weighted_checklist",
   "checklist": [
     {
@@ -18,8 +18,8 @@
       "max_score": 15
     },
     {
-      "name": "Recommended action: flag for sign-off",
-      "description": "Recommended action says, in effect, 'flag for vendor-contract sign-off' or 'confirm UBI free-tier acceptance covers the new major' or similar. NOT 'apply mechanically' and NOT 'do not apply'.",
+      "name": "Recommended action leads with family-escape",
+      "description": "Recommended action recommends a license-free alternative as the primary path — Fedora, Rocky Linux, AlmaLinux, distroless-java, or Wolfi/Chainguard. NOT 'apply mechanically' and NOT just 'flag for sign-off and bump to ubi9'. Sign-off + in-family bump is acceptable as a secondary path in Notes (e.g. for users with hard constraints like an existing OpenShift subscription), but the default recommendation must escape the licensed family.",
       "max_score": 15
     },
     {

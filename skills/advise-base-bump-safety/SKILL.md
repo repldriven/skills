@@ -17,7 +17,7 @@ tags:
   - base-image-upgrade
   - os-currency
   - migration-risk
-version: '0.1'
+version: '0.2'
 author: kjothen
 license: Apache-2.0
 nist_csf:
@@ -58,12 +58,16 @@ the chart accordingly.
 - Auditing *which* images are stale (that's `audit-helm-chart-image-bases`).
 - Rewriting Dockerfiles or producing a forked chart (that's the
   `chart-supply-refresh` CLI).
-- Vetting *new* base choices (Chainguard adoption, distroless
-  migration). This skill classifies version bumps within an OS
-  family, not cross-family base replacement.
 - CVE-specific patch analysis. The classification cares about
   *base-version* risk, not specific CVE applicability — pair with a
   CVE-aware tool if that's what you need.
+
+Cross-family migration *is* in scope when the in-family bump
+triggers `license-aware` or `not-recommended`: a Fedora /
+Rocky / distroless alternative is often the right recommended
+action, and refusing to surface it would land the user on the
+legalistic answer rather than the practical one. See the
+`license-aware` rubric below for the family-escape table.
 
 ## Inputs
 
@@ -157,8 +161,27 @@ The bump crosses a licensing or subscription boundary. Indicators:
    from free to paid editions on major version transitions
    (`cgr.dev/chainguard/<x>` → `cgr.dev/chainguard-private/<x>`).
 
-Recommended action: flag the licensing change explicitly; get
-sign-off from whoever owns vendor contracts.
+**Recommended action — lead with family-escape, not sign-off.**
+The legalistic answer ("get sign-off, then bump") accepts
+friction that the user usually doesn't need to accept. Default
+to recommending a license-free alternative; fall back to
+in-family + sign-off only when the user has a hard constraint
+(existing OpenShift subscription, contractual UBI obligation,
+internal compliance gate that mandates Red Hat). Use the table
+below to pick a family-escape target.
+
+| Source family | Family-escape options (in rough order of cultural-fit) |
+| --- | --- |
+| `redhat/ubi*` | **Fedora** (upstream of RHEL; same `dnf` / RPM ecosystem; current stable as of 2026 is Fedora 42; 13-month support window — note `interim-caution` applies to the support cadence). **Rocky Linux** / **AlmaLinux** (downstream RHEL rebuilds; LTS-style 10-year support; no Red Hat subscription needed). **`gcr.io/distroless/java*`** for stateless JVM workloads. **Wolfi** / **Chainguard** for clean-room minimal bases. |
+| `oraclelinux` / `oracle/jdk*` | **Eclipse Temurin** (Adoptium build of OpenJDK, fully free) on a non-Oracle base. **Rocky** / **Alma** for the OS layer if you need a RHEL-compatible distro. **Distroless-java** for stateless workloads. |
+| `cgr.dev/chainguard/<x>` (free → paid tier) | Stay on the pinned free image until a paid contract is in place, or pivot to **Wolfi-based community images** (Chainguard's underlying distro, fully free), or **distroless** if the workload doesn't need a shell. |
+
+The advice doc records the family-escape target in
+**Recommended action** with a one-line rationale. The original
+in-family bump (e.g. `ubi8 → ubi9`) goes in **Notes** as a
+secondary path, flagged with the licensing requirement, in case
+the user does have a hard constraint and needs the legalistic
+path.
 
 #### `requires-migration`
 
