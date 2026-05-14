@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent classifies a Python-runtime Debian-major bump as requires-migration and cites at least one of the rubric's specific indicators (system Python major shift / OpenSSL major / glibc symbol jump).",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is requires-migration",
+      "description": "advice.md classifies the bump as requires-migration (not safe-mechanical).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites system Python major shift OR OpenSSL major bump",
+      "description": "Indicators section explicitly names at least one of: 'System Python major shift' (bullseye's system Python 3.9 → bookworm's 3.11) OR 'OpenSSL major bump' (Debian 11 ships OpenSSL 1.1; Debian 12+ ships 3.x). Verbatim or clearly equivalent wording.",
+      "max_score": 20
+    },
+    {
+      "name": "Identifies the binary-wheel risk",
+      "description": "The advice connects the rubric's indicator to the input's specifics: binary wheels (cryptography / numpy / psycopg2) link against system libs and may need rebuilding.",
+      "max_score": 15
+    },
+    {
+      "name": "Recommended action says do not apply mechanically",
+      "description": "Recommended action says, in effect, 'do not apply mechanically' or 'human review required' or 'rebuild wheels and verify before rolling out'.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "The advice does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

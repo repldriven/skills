@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent classifies a Go-built Debian-major bump as safe-mechanical and cites the specific safe pattern ('Go-built images moving Debian / RHEL major') from the rubric.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is safe-mechanical",
+      "description": "advice.md classifies the bump as safe-mechanical (not requires-migration, license-aware, interim-caution, or not-recommended).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites the Go-builder safe pattern",
+      "description": "Indicators or Notes section references 'Go-built images moving Debian / RHEL major' (or a clearly equivalent quote from the rubric's safe-mechanical patterns list).",
+      "max_score": 20
+    },
+    {
+      "name": "Cites static-linking / CGO_ENABLED=0 evidence",
+      "description": "The advice cites the context's statement that the binary is statically linked (CGO_ENABLED=0), or references the rubric's 'statically linked' criterion for safe-mechanical.",
+      "max_score": 10
+    },
+    {
+      "name": "Recommended action present and sensible",
+      "description": "Recommended action says, in effect, 'apply mechanically' or 'safe for chart-supply-refresh --allow-bumps safe to consume'. Not 'pause for review'.",
+      "max_score": 20
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "The advice does NOT cite specific CVE identifiers. CVEs were not part of the input context; mentioning them is fabrication.",
+      "max_score": 10
+    }
+  ]
+}

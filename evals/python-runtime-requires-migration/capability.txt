@@ -1,0 +1,1 @@
+Classify a Python-runtime Debian-major bump as requires-migration with the right indicators.

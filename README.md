@@ -16,6 +16,12 @@ Tessl convention.
   slug heuristics, inherited labels, or build-system manifests
   for Dockerfile-less projects) and reports outdated base OS
   releases.
+- **[advise-base-bump-safety](skills/advise-base-bump-safety/SKILL.md)**
+  — Given the audit's findings, classify each proposed
+  base-image bump as `safe-mechanical`, `requires-migration`,
+  `license-aware`, `interim-caution`, or `not-recommended`, and
+  emit a markdown advice doc. Tells you which bumps a downstream
+  tool can apply unattended and which need migration work.
 
 ## Companion tools
 

@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent classifies an alpine:edge source as not-recommended and recommends pinning to the current Alpine stable, instead of leaving the image on edge.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is not-recommended",
+      "description": "advice.md classifies the bump as not-recommended.",
+      "max_score": 40
+    },
+    {
+      "name": "Cites 'Rolling-dev source' indicator",
+      "description": "Indicators section names 'Rolling-dev source' (or clearly equivalent: 'alpine:edge is the development branch of Alpine, not a stable release').",
+      "max_score": 20
+    },
+    {
+      "name": "Recommended target is current Alpine stable",
+      "description": "The 'After' / proposed target in the advice is alpine:3.23 (the current stable per the input's currency-table.md). NOT alpine:edge, NOT alpine:3.22.",
+      "max_score": 20
+    },
+    {
+      "name": "Recommended action: pin to stable, do not auto-apply",
+      "description": "Recommended action says pin to alpine:3.23 manually; mechanical-apply tools should skip this entry because 'safe-mechanical apply would put you back on the same dev branch'.",
+      "max_score": 10
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "The advice does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

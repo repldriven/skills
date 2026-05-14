@@ -1,0 +1,1 @@
+Classify a bump targeting an Ubuntu interim release as interim-caution and recommend the LTS instead.

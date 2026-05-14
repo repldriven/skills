@@ -1,0 +1,1 @@
+Classify a RHEL UBI major bump as license-aware with the right indicators.

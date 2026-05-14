@@ -1,0 +1,1 @@
+Classify an alpine:edge finding as not-recommended; recommend pinning to current Alpine stable.
