@@ -3,11 +3,11 @@
   "infeasible_scenarios": [
     {
       "scenario": "End-to-end audit against a chart with private-registry image dependencies",
-      "reasoning": "The skill's resolution cascade includes oci-label and base-inferred-from-labels signals that require pulling image config from the source registry. Private registries require authentication credentials that the eval sandbox doesn't provide. Tests that exercise the cascade on a private-registry image cannot be evaluated end-to-end; we can only evaluate the fallback (signal failure → next signal in cascade) using stub inputs, as scenario-3 does."
+      "reasoning": "The skill's resolution cascade includes oci-label and base-inferred-from-labels signals that require pulling image config from the source registry. Private registries require authentication credentials that the eval sandbox doesn't provide. Tests that exercise the cascade on a private-registry image cannot be evaluated end-to-end; we can only evaluate the fallback (signal failure → next signal in cascade) using stub inputs, as base-inferred-from-labels-fallback does."
     },
     {
       "scenario": "Full multi-chart audit of a realistic Crossplane management plane (5+ unique upstream source repos)",
-      "reasoning": "A realistic xp-mp chart pulls images from ~7 upstream repos (Crossplane, ArgoCD, Dex, Redis, plus Crossplane Providers from Upbound + crossplane-contrib). End-to-end auditing requires shallow-cloning all of them plus running `crane config` against each — at least a couple of GB of git fetches and several network round-trips per repo. This is technically doable inside the 10-minute timeout but unreliable; large repos like apache/pulsar alone can exceed 30s to shallow-clone. The targeted scenario-0 covers the same workflow on a single small repo, which is the feasible equivalent."
+      "reasoning": "A realistic xp-mp chart pulls images from ~7 upstream repos (Crossplane, ArgoCD, Dex, Redis, plus Crossplane Providers from Upbound + crossplane-contrib). End-to-end auditing requires shallow-cloning all of them plus running `crane config` against each — at least a couple of GB of git fetches and several network round-trips per repo. This is technically doable inside the 10-minute timeout but unreliable; large repos like apache/pulsar alone can exceed 30s to shallow-clone. The targeted chart-sources-with-release-tag covers the same workflow on a single small repo, which is the feasible equivalent."
     }
   ]
 }

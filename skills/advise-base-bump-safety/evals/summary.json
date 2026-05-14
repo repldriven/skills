@@ -3,7 +3,7 @@
   "total_feasible": 5,
   "scenarios": [
     {
-      "id": "scenario-0",
+      "id": "go-builder-safe-mechanical",
       "capability": "Classify a Go-builder Debian-major bump as safe-mechanical with the right indicators",
       "exercises_classifications": ["safe-mechanical"],
       "instructions_covered": [
@@ -15,7 +15,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-1",
+      "id": "python-runtime-requires-migration",
       "capability": "Classify a Python-runtime Debian-major bump as requires-migration with the right indicators",
       "exercises_classifications": ["requires-migration"],
       "instructions_covered": [
@@ -27,7 +27,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-2",
+      "id": "rhel-ubi-license-aware",
       "capability": "Classify a RHEL UBI major bump as license-aware, even when the technical workload would otherwise be safe-mechanical",
       "exercises_classifications": ["license-aware"],
       "instructions_covered": [
@@ -39,7 +39,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-3",
+      "id": "ubuntu-interim-caution",
       "capability": "Classify a target on an Ubuntu interim release as interim-caution; recommend the LTS alternative",
       "exercises_classifications": ["interim-caution"],
       "instructions_covered": [
@@ -50,7 +50,7 @@
       "expected_duration_minutes": 2
     },
     {
-      "id": "scenario-4",
+      "id": "alpine-edge-not-recommended",
       "capability": "Classify an alpine:edge source as not-recommended; recommend pinning to current Alpine stable",
       "exercises_classifications": ["not-recommended"],
       "instructions_covered": [
@@ -61,5 +61,5 @@
       "expected_duration_minutes": 2
     }
   ],
-  "coverage_notes": "Five scenarios, one per classification class in the rubric (safe-mechanical / requires-migration / license-aware / interim-caution / not-recommended). The skill's most opinionated rules — precedence ordering (scenario-2 forces license-aware to beat safe-mechanical) and LTS-default preference (scenario-3 forces interim-caution to surface even when both sides are Ubuntu) — get dedicated scenarios. Reminder-class instructions (read-only, summary panel emission) are not given dedicated scenarios since they're general best practices the eval agent would likely follow anyway."
+  "coverage_notes": "Five scenarios, one per classification class in the rubric (safe-mechanical / requires-migration / license-aware / interim-caution / not-recommended). The skill's most opinionated rules — precedence ordering (rhel-ubi-license-aware forces license-aware to beat safe-mechanical) and LTS-default preference (ubuntu-interim-caution forces interim-caution to surface even when both sides are Ubuntu) — get dedicated scenarios. Reminder-class instructions (read-only, summary panel emission) are not given dedicated scenarios since they're general best practices the eval agent would likely follow anyway."
 }
