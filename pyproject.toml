@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "chart-supply-refresh"
+version = "0.1.0"
+description = "Fork a Helm chart's transitive Dockerfiles onto current base OS images and emit a CI rebuild workflow."
+authors = ["kjothen"]
+license = "Apache-2.0"
+readme = "README.md"
+
+# Polylith bricks. Each component / base is a self-contained
+# subpackage under the shared `chart_supply_refresh` namespace.
+# Components live in components/, bases live in bases/. There is
+# no __init__.py at components/chart_supply_refresh/ or
+# bases/chart_supply_refresh/ — they are PEP 420 namespace
+# parents.
+packages = [
+    { include = "chart_supply_refresh/audit",    from = "components" },
+    { include = "chart_supply_refresh/bumps",    from = "components" },
+    { include = "chart_supply_refresh/fork",     from = "components" },
+    { include = "chart_supply_refresh/workflow", from = "components" },
+    { include = "chart_supply_refresh/plan",     from = "components" },
+    { include = "chart_supply_refresh/cli",      from = "bases" },
+]
+
+# Templates inside the workflow brick must be packaged alongside.
+include = [
+    { path = "components/chart_supply_refresh/workflow/templates/**/*.j2", format = ["sdist", "wheel"] },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+click = "^8.1"
+jinja2 = "^3.1"
+"ruamel.yaml" = ">=0.18"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pyyaml = "^6.0"
+polylith-cli = "^1.27"
+
+[tool.poetry.scripts]
+chart-supply-refresh = "chart_supply_refresh.cli.core:main"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+# importlib mode lets pytest discover same-named test_core.py files across
+# the Polylith mirror layout without colliding module names.
+addopts = "--import-mode=importlib"
+
+[build-system]
+requires = ["poetry-core>=1.8"]
+build-backend = "poetry.core.masonry.api"
