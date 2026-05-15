@@ -1,0 +1,31 @@
+{
+  "context": "Tests the trickiest rubric distinction in the skill: that two images from the same vendor (Chainguard) can land in different tiers based on the source registry path. cgr.dev/chainguard/* is free; cgr.dev/chainguard-private/* is commercial. Collapsing them into a single 'Chainguard' verdict is the most plausible failure mode of an unprimed model.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Free image classified as free",
+      "description": "image-graph classifies cgr.dev/chainguard/redis:latest as tier=free.",
+      "max_score": 30
+    },
+    {
+      "name": "Paid image classified as commercial",
+      "description": "image-graph classifies cgr.dev/chainguard-private/postgres:16 as tier=commercial (NOT free).",
+      "max_score": 30
+    },
+    {
+      "name": "Tiers not collapsed to vendor verdict",
+      "description": "Report does NOT lump both into a single 'Chainguard' verdict. The two images appear in different tier rows in image-graph.md and have different tier values in image-graph.json.",
+      "max_score": 20
+    },
+    {
+      "name": "Cites the source-registry distinction",
+      "description": "Report's explanation cites that the registry path (chainguard/* vs chainguard-private/*) is the tie-breaker, not the vendor name. Verbatim or clearly equivalent.",
+      "max_score": 10
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "Report does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "repldriven/skills",
-  "version": "0.2.0",
-  "summary": "Platform skills authored by repldriven. Helm chart base-image audit + the companion bump-safety advisor; deterministic remediation tooling lives in repldriven/tools.",
+  "version": "0.3.0",
+  "summary": "Platform skills authored by repldriven. Three complementary lenses on a Helm chart's image tree: currency audit, bump-safety advice, and license-tier tracing. Deterministic remediation tooling lives in repldriven/tools.",
   "private": true,
   "skills": {
     "audit-helm-chart-image-bases": {
@@ -9,6 +9,9 @@
     },
     "advise-base-bump-safety": {
       "path": "skills/advise-base-bump-safety/SKILL.md"
+    },
+    "map-helm-chart-image-bases": {
+      "path": "skills/map-helm-chart-image-bases/SKILL.md"
     }
   }
 }

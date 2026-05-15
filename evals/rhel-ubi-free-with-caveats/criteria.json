@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent classifies a RHEL UBI image as free-with-caveats (NOT free — which would miss the supported-software-list constraint — and NOT commercial — which would overstate the cost), cites the named caveat, and recommends Rocky/Alma as the escape for users wanting full freedom.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is free-with-caveats",
+      "description": "image-graph classifies registry.access.redhat.com/ubi9/openjdk-21 as tier=free-with-caveats. NOT free (which would miss the procurement-relevant caveat). NOT commercial (which would overstate — UBI itself is free to redistribute).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites the Red Hat supported-software-list caveat",
+      "description": "Report cites that UBI is tied to Red Hat's supported-software list and that some packages outside that list require a subscription for patches. Verbatim or clearly equivalent wording.",
+      "max_score": 20
+    },
+    {
+      "name": "Detection signal is cosign-attestation",
+      "description": "Detection signal recorded for this image is `cosign-attestation` (NOT syft-scan or oci-label). The strict ordering of the detection chain means cosign wins when an SBOM is attached.",
+      "max_score": 15
+    },
+    {
+      "name": "Recommends Rocky/Alma (or distroless-java) escape",
+      "description": "Escape recommendation names Rocky Linux, AlmaLinux, OR distroless-java (for stateless JVM workloads). Acknowledges that UBI is acceptable for users already in the Red Hat ecosystem who can live within the supported-software list.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "Report does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "skill": "map-helm-chart-image-bases",
+  "total_feasible": 5,
+  "scenarios": [
+    {
+      "id": "bitnami-legacy-stale",
+      "capability": "Classify a docker.io/bitnamilegacy/* image as stale, flag the urgency (no patches coming), and recommend a per-workload escape (Docker Official, Chainguard, CloudNativePG)",
+      "exercises_tiers": ["stale"],
+      "instructions_covered": [
+        "Classify `docker.io/bitnamilegacy/*` as `stale` tier with an urgency flag — the legacy archive receives no patches post-September-2025.",
+        "Per-source-family escape recommendations should name the actual replacement for the workload, not a generic 'Docker Official' pointer.",
+        "Never cite specific CVE identifiers."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "rhel-ubi-free-with-caveats",
+      "capability": "Classify a registry.access.redhat.com/ubi9/* image as free-with-caveats (not free, not commercial); cite the Red Hat supported-software-list caveat; recommend Rocky/Alma escape for users wanting full freedom",
+      "exercises_tiers": ["free-with-caveats"],
+      "instructions_covered": [
+        "Classify RHEL UBI as `free-with-caveats`, not `free` or `commercial`. UBI is free to redistribute but tied to Red Hat's supported-software list.",
+        "Per-source-family escape recommendations should name the actual replacement for the workload.",
+        "Walk the detection chain in strict order (cosign-attestation first when an SBOM is attached)."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "chainguard-vs-paid-tier",
+      "capability": "Distinguish cgr.dev/chainguard/* (free) from cgr.dev/chainguard-private/* (commercial) — must not collapse them into a single vendor verdict",
+      "exercises_tiers": ["free", "commercial"],
+      "instructions_covered": [
+        "Tier classification is non-collapsible. Free Chainguard public images and paid Chainguard private images are distinct tiers — do not collapse to a vendor verdict.",
+        "Per-source-family escape recommendations should name the actual replacement for the workload."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "distroless-scratch-graceful",
+      "capability": "Handle distroless and FROM scratch images gracefully: record signal distroless-or-scratch, tier n/a, escape no-escape-needed; do not crash",
+      "exercises_tiers": ["n/a"],
+      "instructions_covered": [
+        "Distroless and FROM scratch images are not detection failures. Record signal `distroless-or-scratch`, classify tier as `n/a`, mark escape `no-escape-needed`. Do not crash on missing /etc/os-release.",
+        "Always record the detection signal."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    },
+    {
+      "id": "multi-image-mixed-tiers",
+      "capability": "Emit the full graph for a chart with images spanning all 4 license tiers; sort report so commercial + stale entries appear at the top",
+      "exercises_tiers": ["free", "free-with-caveats", "commercial", "stale"],
+      "instructions_covered": [
+        "Report sorting: commercial and stale entries at the top of image-graph.md, then free-with-caveats, then free.",
+        "Emit two artifacts: image-graph.json (structured graph) AND image-graph.md (human report).",
+        "Tier classification is non-collapsible across all 4 tiers."
+      ],
+      "requires_network": false,
+      "expected_duration_minutes": 2
+    }
+  ],
+  "coverage_notes": "Five scenarios, one per license tier plus a multi-image integration test. The trickiest distinction (chainguard-vs-paid-tier) gets a dedicated scenario since collapsing free and paid Chainguard into a single 'Chainguard' verdict is the most plausible failure mode of an unprimed model. The Bitnami scenario tests the post-September-2025 headline (the urgency flag is the load-bearing teaching). The distroless-scratch scenario tests that the skill doesn't crash on the no-OS-layer fallback path."
+}

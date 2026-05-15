@@ -1,0 +1,1 @@
+Handle distroless and FROM scratch images gracefully — detection signal `distroless-or-scratch`, tier `n/a`, escape `no-escape-needed`. Do not crash on missing /etc/os-release; do not invent an OS.

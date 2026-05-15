@@ -1,0 +1,76 @@
+{
+  "instructions": [
+    {
+      "instruction": "Walk the detection chain in strict order: cosign-attestation → oci-label → syft-scan → distroless-or-scratch fallback. Stop at the first authoritative hit and record the signal used.",
+      "original_snippets": "Walk the detection chain in references/detection-chain.md. Strict order, stop at first authoritative hit, record the signal. Authoritative is cosign / SBOM > OCI labels > syft.",
+      "relevant_when": "Always — applies to every ImageRef in the graph",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Tier classification is non-collapsible. Free Chainguard public images (cgr.dev/chainguard/*) and paid Chainguard private images (cgr.dev/chainguard-private/*) are distinct tiers — do not collapse to a vendor verdict.",
+      "original_snippets": "Tier classification is non-collapsible. Free Chainguard public images and paid `chainguard-private` images are separate tiers; do not collapse to a vendor verdict.",
+      "relevant_when": "When a chart pulls images from a vendor with both free and paid tiers (Chainguard, Bitnami, Ubuntu)",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Classify `docker.io/bitnamilegacy/*` as `stale` tier with an urgency flag — the legacy archive receives no patches post-September-2025.",
+      "original_snippets": "`docker.io/bitnamilegacy/*` | Frozen archive after Bitnami's free catalogue retirement (late September 2025). No patches forthcoming. ... Urgent — no patches coming.",
+      "relevant_when": "When the chart pulls any image from docker.io/bitnamilegacy/*",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Classify RHEL UBI as `free-with-caveats`, not `free` or `commercial`. UBI is free to redistribute but tied to Red Hat's supported-software list, which is a procurement-relevant caveat.",
+      "original_snippets": "RHEL UBI (`registry.access.redhat.com/ubi*`) | Free to redistribute, but UBI is tied to Red Hat's supported-software list. Some packages are gated behind a subscription if you want patches outside the UBI core.",
+      "relevant_when": "When a chart pulls registry.access.redhat.com/ubi* or any RHEL UBI variant",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Distroless and FROM scratch images are not detection failures. Record signal `distroless-or-scratch`, classify tier as `n/a`, mark escape `no-escape-needed`. Do not crash on missing /etc/os-release.",
+      "original_snippets": "**`FROM scratch` / static binaries**: detection signal is `distroless-or-scratch`, classification is `n/a` (no OS to license), escape-hatch is `no-escape-needed`. These are valid states, not errors.",
+      "relevant_when": "When an ImageRef is distroless or built FROM scratch (no OS layer)",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Per-source-family escape recommendations should name the actual replacement for the workload, not a generic 'Docker Official' pointer. E.g. Bitnami Postgres → Docker Official Postgres OR CloudNativePG, not 'just use Docker Official'.",
+      "original_snippets": "Pick the **first viable target for the workload type** — a generic \"Docker Official\" pointer is less useful than naming the actual replacement (e.g. the Postgres replacement for Bitnami Postgres).",
+      "relevant_when": "When recommending an escape for a tier ≠ free entry",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Multi-arch manifests: always specify --platform explicitly. Don't run the detection chain without pinning the architecture.",
+      "original_snippets": "Multi-arch manifests: always specify `--platform`. A chart whose `linux/amd64` manifest uses one base and `linux/arm64` uses another will produce inconsistent runs if you don't pin.",
+      "relevant_when": "When inspecting any image whose manifest is multi-arch",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Resolve subchart values overrides during image enumeration — Bitnami charts in particular thread image pins via subchart values, not chart templates. A naive template scan misses them.",
+      "original_snippets": "Bitnami charts in particular pin images via subchart values, not chart templates. The enumeration step must resolve overrides, not just scan rendered templates.",
+      "relevant_when": "When enumerating images in a chart with subcharts (Bitnami stack, Helm dependencies)",
+      "why_given": "new knowledge"
+    },
+    {
+      "instruction": "Report sorting: commercial and stale entries at the top of image-graph.md, then free-with-caveats, then free. Actionable findings first.",
+      "original_snippets": "per-image table sorted with `commercial` and `stale` at the top — those are the actionable findings.",
+      "relevant_when": "Always — applies to every image-graph.md emission",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Emit two artifacts: image-graph.json (structured graph) AND image-graph.md (human report).",
+      "original_snippets": "The skill emits two artifacts in the working directory: 1. `image-graph.json` ... 2. `image-graph.md`",
+      "relevant_when": "At the end of every map run",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Never cite specific CVE identifiers. This skill classifies license tier, not vulnerability state. CVE-aware tooling is a separate concern.",
+      "original_snippets": "No invented CVE / vendor claims. This skill classifies license tier, not vulnerability state. Pair with a CVE-aware tool if that's what you need.",
+      "relevant_when": "Always — applies to every entry in the report",
+      "why_given": "particular preference"
+    },
+    {
+      "instruction": "Read-only. Never modify charts, images, or registries.",
+      "original_snippets": "Read-only. Never modify charts, images, or registries.",
+      "relevant_when": "Always — any map run",
+      "why_given": "reminder"
+    }
+  ]
+}

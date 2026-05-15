@@ -1,0 +1,1 @@
+Classify a docker.io/bitnamilegacy/* image as stale, flag the urgency (no patches coming post-September-2025), and recommend a per-workload escape (Docker Official Postgres, CloudNativePG, Chainguard).

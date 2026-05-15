@@ -1,0 +1,1 @@
+Distinguish cgr.dev/chainguard/* (free public images) from cgr.dev/chainguard-private/* (paid tier) — must not collapse them into a single vendor verdict.
