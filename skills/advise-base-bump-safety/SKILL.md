@@ -1,13 +1,18 @@
 ---
 name: advise-base-bump-safety
 description: >
-  Given a list of Dockerfile base-image bumps proposed by an audit
-  (current FROM → suggested FROM), classify each as safe-mechanical,
-  requires-migration, license-aware, interim-caution, or
-  not-recommended, and emit a per-image markdown advice doc. Pairs
-  with audit-helm-chart-image-bases (this skill's input) and the
-  chart-supply-refresh CLI (the tool that applies the safe-mechanical
-  subset deterministically).
+  Use when the user has output from audit-helm-chart-image-bases (or
+  is otherwise asked to triage Docker base-image upgrades) and needs
+  to know which bumps are safe to apply unattended versus which need
+  migration work. Triggers on: "upgrade base images", "update Docker
+  images", "container image version bumps", "Docker FROM line
+  changes", "is it safe to bump bookworm to trixie", "review this
+  Renovate base-image PR". Classifies each proposed FROM → FROM bump
+  as safe-mechanical, requires-migration, license-aware,
+  interim-caution, or not-recommended, and emits a per-image markdown
+  advice doc. Pairs with audit-helm-chart-image-bases (this skill's
+  input) and the chart-supply-refresh CLI (the tool that applies the
+  safe-mechanical subset deterministically).
 domain: cybersecurity
 subdomain: supply-chain-security
 tags:
@@ -43,31 +48,17 @@ the chart accordingly.
 
 ## When to Use
 
-- After running `audit-helm-chart-image-bases` against a chart and
-  before letting a tool auto-rewrite Dockerfiles, to decide which
-  bumps are safe to apply unattended.
-- When investigating a CVE that affects a specific OS major and you
-  want a triage doc: "bump every image off Debian 12 → safe? Or
-  does anything need migration?"
-- When reviewing an automated PR (Renovate / Dependabot) that
-  proposes a base bump, to sanity-check whether the diff is the
-  whole story or whether code/config changes ride with it.
+Use to triage proposed Docker base-image bumps before applying them
+— either from an `audit-helm-chart-image-bases` report, a Renovate /
+Dependabot PR, or a CVE-driven OS-major sweep. Cross-family migration
+(escape from RHEL UBI, Oracle JDK, paid-Chainguard) *is* in scope
+when the in-family bump triggers `license-aware` or `not-recommended`
+— the `license-aware` rubric routes there by default.
 
-**Do not use** for:
-
-- Auditing *which* images are stale (that's `audit-helm-chart-image-bases`).
-- Rewriting Dockerfiles or producing a forked chart (that's the
-  `chart-supply-refresh` CLI).
-- CVE-specific patch analysis. The classification cares about
-  *base-version* risk, not specific CVE applicability — pair with a
-  CVE-aware tool if that's what you need.
-
-Cross-family migration *is* in scope when the in-family bump
-triggers `license-aware` or `not-recommended`: a Fedora /
-Rocky / distroless alternative is often the right recommended
-action, and refusing to surface it would land the user on the
-legalistic answer rather than the practical one. See the
-`license-aware` rubric below for the family-escape table.
+**Do not use** for: auditing which images are stale
+(`audit-helm-chart-image-bases`), rewriting Dockerfiles or forking a
+chart (`chart-supply-refresh`), or CVE-specific patch analysis
+(pair with a CVE-aware tool).
 
 ## Inputs
 
@@ -161,27 +152,14 @@ The bump crosses a licensing or subscription boundary. Indicators:
    from free to paid editions on major version transitions
    (`cgr.dev/chainguard/<x>` → `cgr.dev/chainguard-private/<x>`).
 
-**Recommended action — lead with family-escape, not sign-off.**
-The legalistic answer ("get sign-off, then bump") accepts
-friction that the user usually doesn't need to accept. Default
-to recommending a license-free alternative; fall back to
-in-family + sign-off only when the user has a hard constraint
-(existing OpenShift subscription, contractual UBI obligation,
-internal compliance gate that mandates Red Hat). Use the table
-below to pick a family-escape target.
-
-| Source family | Family-escape options (in rough order of cultural-fit) |
-| --- | --- |
-| `redhat/ubi*` | **Fedora** (upstream of RHEL; same `dnf` / RPM ecosystem; current stable as of 2026 is Fedora 42; 13-month support window — note `interim-caution` applies to the support cadence). **Rocky Linux** / **AlmaLinux** (downstream RHEL rebuilds; LTS-style 10-year support; no Red Hat subscription needed). **`gcr.io/distroless/java*`** for stateless JVM workloads. **Wolfi** / **Chainguard** for clean-room minimal bases. |
-| `oraclelinux` / `oracle/jdk*` | **Eclipse Temurin** (Adoptium build of OpenJDK, fully free) on a non-Oracle base. **Rocky** / **Alma** for the OS layer if you need a RHEL-compatible distro. **Distroless-java** for stateless workloads. |
-| `cgr.dev/chainguard/<x>` (free → paid tier) | Stay on the pinned free image until a paid contract is in place, or pivot to **Wolfi-based community images** (Chainguard's underlying distro, fully free), or **distroless** if the workload doesn't need a shell. |
-
-The advice doc records the family-escape target in
-**Recommended action** with a one-line rationale. The original
-in-family bump (e.g. `ubi8 → ubi9`) goes in **Notes** as a
-secondary path, flagged with the licensing requirement, in case
-the user does have a hard constraint and needs the legalistic
-path.
+**Recommended action — lead with family-escape, not sign-off.** The
+legalistic answer ("get sign-off, then bump") accepts friction the
+user usually doesn't need to accept. Default to a license-free
+alternative; fall back to in-family + sign-off only when the user has
+a hard constraint. See
+[references/family-escape.md](./references/family-escape.md) for the
+per-source-family escape table and how to record the escape in the
+advice doc.
 
 #### `requires-migration`
 
@@ -259,60 +237,14 @@ up.
 
 ### Step 3: Emit the advice doc
 
-For each FROM in the audit's findings, write one section to the
-output:
+Write one section per FROM under its owning chart (matches the
+audit's grouping), with a top-of-file summary panel counting
+findings per classification. See
+[references/output-format.md](./references/output-format.md) for the
+exact section template and summary-panel format.
 
-```markdown
-## <image>:<tag>  ·  stage: <stage>
-
-- **Classification**: <safe-mechanical | requires-migration | …>
-- **Before**: `<original FROM>`
-- **After**:  `<proposed FROM>`  (source: <audit-table | user-override>)
-- **Indicators**:
-  - <indicator-1>
-  - <indicator-2>
-- **Recommended action**: <one sentence>
-- **Notes** (optional): <any caveats, license citations, etc.>
-```
-
-Group sections under the owning chart (matches the audit's
-grouping). Top of the file carries a summary panel:
-
-```
-Classification counts (n findings):
-  safe-mechanical       N
-  requires-migration    N
-  license-aware         N
-  interim-caution       N
-  not-recommended       N
-  no-action-needed      N
-```
-
-## Output Format
-
-The skill emits one artifact in the working directory:
-
-- `advice.md` — the markdown advice doc described above. Suitable
-  to paste into a PR description, a SECURITY.md follow-up, or
-  pipe to the `chart-supply-refresh --allow-bumps safe` tool to
-  consume the safe-mechanical subset.
-
-If `--json` is passed, also emit:
-
-- `advice.json` — structured findings, one entry per FROM, with
-  the classification + indicators recorded.
-
-## Key Concepts
-
-| Term | Meaning |
-| --- | --- |
-| Indicator | A named heuristic that, when matched, justifies a classification. Indicators are listed by name in the rubric and quoted verbatim in the advice doc, so the user can see what evidence the skill weighed. |
-| `safe-mechanical` | The bump is a pure version-tag swap with no runtime ABI implication. The downstream tool can apply it without human review. |
-| `requires-migration` | Mechanically possible but introduces ABI / behavioural change likely to break the workload. Needs code / config / wheel-rebuild changes. |
-| `license-aware` | Crosses a vendor licensing or support-model boundary (RHEL UBI majors, Oracle JDK, Chainguard tier). Bump is legally / contractually consequential. |
-| `interim-caution` | Lands on a short-support track (Ubuntu interim, Fedora). Recommend the LTS alternative unless the user explicitly opts in. |
-| `not-recommended` | Goes backwards, into EOL, or stays on a development branch. Should not be applied as proposed. |
-| `no-action-needed` | The audit didn't flag the FROM as stale (currency: `current` or `rolling-stable`). Reported for completeness; no advice generated. |
+Always emit `advice.md`. If `--json` is passed, additionally emit
+`advice.json` (structured findings, one entry per FROM).
 
 ## Hard Constraints
 
@@ -334,7 +266,6 @@ If `--json` is passed, also emit:
   CVE identifiers unless they appear in the input context. The
   classification is about base-version *risk*, not about specific
   vulnerabilities — pair with a CVE-aware tool for that.
-- **`no-action-needed` is reported, not silently dropped.** Every
-  FROM in the audit appears in `advice.md`, even if its only
-  status is "already current". Silent omission breaks the
-  user's expectation that the advice covers the whole audit.
+- **Every FROM appears in `advice.md`.** Even already-current ones
+  (as `no-action-needed`). Silent omission breaks the user's
+  expectation that the advice covers the whole audit.

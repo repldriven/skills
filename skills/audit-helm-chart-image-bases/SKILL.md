@@ -46,27 +46,16 @@ capability to layer on top.
 
 ## When to Use
 
-- When a Helm chart's images need a security-driven OS refresh
-  and you need to know *which* of its transitive Dockerfiles are
-  still on an old major release.
-- When auditing a chart you vendored locally (the upstream
-  doesn't publish a Helm repo) and you want to verify the
-  upstream Dockerfiles haven't drifted onto a stale base since
-  you vendored.
-- When investigating a CVE that affects a specific OS major and
-  you need to enumerate the Dockerfiles across the chart's
-  image set that still build on the affected major.
-- When establishing a baseline before a refactor that will
-  rebuild every image off a fresh base.
+Use when you need to know *which* transitive Dockerfiles in a Helm
+chart's image tree are still on a stale base OS — security-driven OS
+refreshes, vendored-chart drift checks, CVE-impact enumeration, or
+baselining before a fresh-base refactor.
 
-**Do not use** for:
-
-- Bumping image *tags* on already-published hardened images
-  (Renovate / Dependabot handle that pattern).
-- Rewriting Dockerfiles to switch to Chainguard / distroless
-  bases (that is base-replacement, not base-version-currency).
-- Producing a values override that swaps image refs without
-  rebuilding (this skill does not emit values overrides).
+**Do not use** for: bumping image tags on already-published hardened
+images (use Renovate / Dependabot), switching to Chainguard /
+distroless bases (that's base *replacement*, not currency), or
+emitting values overrides without rebuilding (this skill is
+read-only).
 
 ## Prerequisites
 
@@ -100,15 +89,12 @@ capability to layer on top.
 
 ### Step 0: Render and inventory
 
-Render the chart with defaults and extract every image reference,
-including Crossplane package references (which use `package:`
-keys on `pkg.crossplane.io` resources, not `image:`).
-
-Use a YAML-aware parse, not a regex sweep. `helm template` emits
-multi-document YAML; `yaml.safe_load_all` walks it cleanly and
-lets you discriminate by `kind` / `apiVersion` so Crossplane
-packages don't get confused with unrelated `package:` keys
-elsewhere (npm `package.json` embedded in a ConfigMap, etc.).
+Render the chart and extract every image reference. Use a YAML-aware
+parse (not a regex sweep), discriminating by `kind` + `apiVersion`,
+so Crossplane packages (`.spec.package` on `pkg.crossplane.io`
+resources) are caught alongside `image:` keys without false positives
+from unrelated `package:` strings (e.g. an npm `package.json` in a
+ConfigMap).
 
 ```bash
 helm dependency update "$CHART"
@@ -314,28 +300,12 @@ Pick the one that builds the specific image:
   candidates and flag the image as `dockerfile-ambiguous`. Do
   not pick one arbitrarily.
 
-**No Dockerfile at all? Look for a build-system manifest
-instead.** Some upstream projects don't ship a Dockerfile —
-they build container images directly via Nix `dockerTools`,
-Google's `ko`, Bazel `rules_docker` / `rules_oci`, or Jib
-(Java). The audit recognises this is not a gap but a different
-build paradigm. Probe the cloned repo for build-system files
-in this order:
-
-| File | Build system | Where the base is declared |
-| --- | --- | --- |
-| `flake.nix`, `nix/build.nix` | Nix `dockerTools` | `nixpkgs.url` input pin + `dockerTools.buildImage` `fromImage` (often omitted → distroless-equivalent) |
-| `.ko.yaml`, `KO_DEFAULTS` | ko | `defaultBaseImage:` (typically `cgr.dev/chainguard/static` or `gcr.io/distroless/static`) |
-| `BUILD.bazel` referencing `oci_image` / `container_image` | Bazel rules_oci / rules_docker | `base = "..."` attribute on the `oci_image` / `container_image` target |
-| `jib-maven-plugin` / `jib-gradle-plugin` config | Jib | `<from><image>` in pom.xml or `jib.from.image` in build.gradle |
-
-If a build-system manifest is found, record
-`dockerfile: <build-system>-built` (e.g. `nix-built`,
-`ko-built`, `bazel-built`, `jib-built`) and proceed to step 5's
-build-system-aware path. If no Dockerfile *and* no recognised
-build-system file is present, the image is genuinely
-`dockerfile-unknown` and step 5 falls back to
-`base-inferred-from-labels`.
+**No Dockerfile at all?** Probe for a build-system manifest
+(`flake.nix`, `.ko.yaml`, `BUILD.bazel`, Jib config) before declaring
+the image source-unknown. Record `dockerfile: <system>-built` (e.g.
+`nix-built`) on a hit, then continue to Step 5's build-system-aware
+path. See [references/build-systems.md](./references/build-systems.md)
+for the manifest table and per-system base-extraction details.
 
 ### Step 5: Parse FROM instructions
 
@@ -357,132 +327,43 @@ should resolve to two concrete bases: `golang:1.22` and
 declarations as the source of truth — do not invent values for
 ARGs with no default.
 
-**Build-system-aware path** (Dockerfile-less images). When step
-4 returned `<build-system>-built` instead of a Dockerfile path,
-extract the base from the build manifest:
-
-- **Nix `dockerTools`** — read the `nixpkgs.url` flake input
-  (e.g. `nixos-25.11`) and any `fromImage` argument to
-  `dockerTools.buildImage`. If `fromImage` is absent, the image
-  is assembled from Nix packages with no traditional base; record
-  the nixpkgs pin as the closest analog of an OS version and
-  classify against the corresponding NixOS release.
-- **ko** — read `defaultBaseImage:` from `.ko.yaml`. Common
-  values resolve to Chainguard static (rolling-stable) or
-  Google distroless (rolling-stable).
-- **Bazel** — read the `base = "@some_image//image"` attribute
-  on the `oci_image` / `container_image` target; resolve through
-  the `WORKSPACE` / `MODULE.bazel` to the registry ref.
-- **Jib** — read `<from><image>` (Maven) or `jib.from.image`
-  (Gradle); defaults to `gcr.io/distroless/java` if unset.
-
-Record the build-system pin (e.g. `nixpkgs:nixos-25.11`,
-`ko:cgr.dev/chainguard/static:latest`,
-`jib:gcr.io/distroless/java17:nonroot`) as the FROM-equivalent
-in the report. If no explicit base is declared, record
-`build-system-default` and classify as `rolling-stable` —
-these systems default to vendor-managed minimal bases.
+**Build-system-aware path** (Dockerfile-less images). When Step 4
+returned `<build-system>-built`, extract the base from the build
+manifest instead — see
+[references/build-systems.md](./references/build-systems.md) for
+per-system instructions. Record the build-system pin (e.g.
+`nixpkgs:nixos-25.11`, `ko:cgr.dev/chainguard/static:latest`) as the
+FROM-equivalent. If no explicit base is declared, record
+`build-system-default` and classify as `rolling-stable`.
 
 ### Step 6: Classify each base by OS family and version
 
-Map each resolved FROM to a `(family, version)` pair using the
-table below. Tags lacking an obvious OS signal (e.g. plain
-`golang:1.22`) resolve to the *runtime image's own current
-default base* via a small lookup — flagged in the report so the
-user knows the classification is one inference removed.
+Map each FROM to `(family, version)` using the tag-pattern table in
+[references/os-classification.md](./references/os-classification.md).
+Key load-bearing distinctions the reference enforces:
 
-| Tag pattern | Family | Version |
-| --- | --- | --- |
-| `debian:bookworm*`, `debian:12*` | Debian | 12 |
-| `debian:trixie*`, `debian:13*` | Debian | 13 |
-| `debian:bullseye*`, `debian:11*` | Debian | 11 |
-| `debian:sid*`, `debian:unstable*` | Debian | **rolling-dev** |
-| `ubuntu:24.04`, `ubuntu:noble` | Ubuntu LTS | 24.04 |
-| `ubuntu:22.04`, `ubuntu:jammy` | Ubuntu LTS | 22.04 |
-| `ubuntu:20.04`, `ubuntu:focal` | Ubuntu LTS | 20.04 |
-| `ubuntu:25.10`, `ubuntu:questing` | Ubuntu interim | 25.10 |
-| `ubuntu:25.04`, `ubuntu:plucky` | Ubuntu interim | 25.04 |
-| `ubuntu:24.10`, `ubuntu:oracular` | Ubuntu interim | 24.10 |
-| `ubuntu:devel*`, `ubuntu:rolling*` | Ubuntu | **rolling-dev** |
-| `alpine:3.23*` | Alpine | 3.23 |
-| `alpine:3.22*` | Alpine | 3.22 |
-| `alpine:3.21*` | Alpine | 3.21 |
-| `alpine:3.<N>*` (3.18–3.20) | Alpine | 3.N |
-| `alpine:edge*` | Alpine | **rolling-dev** |
-| `redhat/ubi9*`, `rockylinux:9*` | RHEL-family | 9 |
-| `redhat/ubi8*`, `rockylinux:8*` | RHEL-family | 8 |
-| `gcr.io/distroless/*` | distroless | rolling-stable |
-| `scratch` | (none) | n/a |
-
-**Ubuntu LTS vs interim — two separate tracks.** Ubuntu ships a
-new release every six months (`24.10`, `25.04`, `25.10`, …) but
-only the `.04` of every even year (`20.04`, `22.04`, `24.04`,
-`26.04`) is an LTS with 5+ years of standard support. Interim
-releases get 9 months of support. The currency table compares
-to the latest LTS; interim releases land in their own
-classification (`non-lts-interim`) because they're neither
-"current LTS" nor "one-behind LTS" in any meaningful sense.
-
-**Distinguish `rolling-stable` from `rolling-dev`.** Both are
-moving targets, but they carry different risk profiles:
-
-- *rolling-stable* — distroless, Chainguard, `:latest` on
-  vendor-managed runtime images. The vendor is rebuilding for
-  the *current stable* OS major. Acceptable baseline; flag
-  only if explicit version-pinning is a project policy.
-- *rolling-dev* — `alpine:edge`, `debian:sid`,
-  `debian:unstable`, `ubuntu:devel`. The image is built from
-  the OS's *development* branch, not its stable release. A
-  scarier baseline than "one-behind stable", because the next
-  rebuild may pick up an unstable change. Flag explicitly.
-
-Language-runtime images (`golang`, `python`, `openjdk`, `node`)
-without an OS suffix carry an implicit base — record as
-`base-inferred` with the inference noted (e.g. `node:22-alpine`
-currently inherits Alpine 3.21).
+- **Ubuntu LTS vs interim** are separate tracks. Interim releases
+  (`24.10`, `25.04`, `25.10`) classify as `non-lts-interim`, **not**
+  `one-behind` — the support windows are 9 months vs 5+ years.
+- **`rolling-stable` vs `rolling-dev`** are separate buckets.
+  Distroless / Chainguard / vendor-`:latest` are stable-rolling;
+  `alpine:edge` / `debian:sid` / `ubuntu:devel` are dev-rolling and
+  riskier. Never collapse them to a single `rolling` bucket.
+- **Language-runtime images** (`golang`, `python`, `node`) without an
+  OS suffix carry an implicit base — record as `base-inferred` with
+  the inference noted.
 
 ### Step 7: Compare against the OS-currency table
 
-The skill ships a small lookup of current stable OS releases.
-**This table is the source of truth for the run** and is
-versioned with the skill — keep it under review.
-
-| Family | Current stable | Previous stable | Notes |
-| --- | --- | --- | --- |
-| Debian | trixie (13) | bookworm (12) | trixie became stable 2025-08-09 |
-| Ubuntu LTS | 24.04 (noble) | 22.04 (jammy) | Next LTS 26.04 spring 2026 |
-| Ubuntu interim | 25.10 (questing) | 25.04 (plucky) | 9-month support; not on the LTS comparison track |
-| Alpine | 3.23 | 3.22 | New minor ~every 6 months; 3.23 stable since Nov 2025 |
-| RHEL-family | 9 | 8 | RHEL 10 in preview |
-| NixOS (for Nix-built images) | 25.11 | 25.05 | Twice-yearly stable; tracked here only to classify Nix-built images via `nixpkgs.url` |
-
-Classification per base:
-
-- `current` — matches current stable
-- `one-behind` — matches previous stable
-- `multi-behind` — older than previous stable
-- `non-lts-interim` — Ubuntu interim release (`25.10`, `25.04`,
-  `24.10`, etc.). Compared to the latest interim, not the LTS;
-  flagged because it's a 9-month-support track, not a 5-year one.
-- `rolling-stable` — distroless / `scratch` / Chainguard /
-  vendor-`:latest` (rebuilds against current stable). Also
-  covers Dockerfile-less images whose build system
-  (`nix-built`, `ko-built`, `bazel-built`, `jib-built`)
-  defaults to a vendor-managed minimal base.
-- `rolling-dev` — `alpine:edge`, `debian:sid`,
-  `debian:unstable`, `ubuntu:devel` (rebuilds against the
-  OS's *development* branch, not its stable release)
-- `unsupported` — past the family's EOL (Debian 10, Ubuntu 18.04,
-  Alpine ≤ 3.17, RHEL 7)
-
-For `<build-system>-built` images, the comparison runs against
-the build system's pin instead of an OS tag — e.g. a
-`nix-built` image with `nixpkgs.url = nixos-25.11` is
-classified `current` (NixOS 25.11 is the current stable); a
-`nixpkgs.url = nixos-25.05` pin would be `one-behind`.
-
-If the table itself looks more than ~6 months stale at run time,
-the report's header carries a `table-stale` warning.
+Each base is compared against the skill's versioned currency lookup
+in
+[references/os-currency-table.md](./references/os-currency-table.md).
+The classification labels are: `current`, `one-behind`,
+`multi-behind`, `non-lts-interim`, `rolling-stable`, `rolling-dev`,
+`unsupported`. For `<build-system>-built` images, comparison runs
+against the build system's pin (e.g. `nixpkgs.url`) rather than an OS
+tag. If the table itself looks more than ~6 months stale at run time,
+the report header carries a `table-stale` warning.
 
 ### Step 8: Emit the tree report
 
@@ -498,23 +379,6 @@ every image landed in one of the resolution buckets. Findings
 themselves (stale bases, unsupported releases) do not fail the
 run — they are the output.
 
-## Key Concepts
-
-| Term | Meaning |
-| --- | --- |
-| Transitive base | The `FROM` image of an image referenced by a chart; one layer below the chart's image-pin. |
-| Owning chart | The chart whose template renders a given image (main chart or subchart alias). |
-| Resolution signal | The mechanism used to map an image to its source Dockerfile: `local`, `chart-sources`, `slug-heuristic`, `oci-label`, `base-inferred-from-labels`, `source-unknown`. |
-| OS-currency table | The skill's static lookup of current stable OS releases. Authoritative for a given skill version; updated as new majors land. |
-| `base-inferred` | A language-runtime image (`golang:1.22`) whose underlying OS base is recorded by inference rather than read directly from a `FROM debian:...` line. |
-| `base-inferred-from-labels` | Fallback when the Dockerfile is unfindable: the final-stage base identified from labels inherited via `crane config`. Reliable for the runtime layer only; cannot recover build-stage bases. |
-| `dockerfile-ambiguous` | An image whose source repo contains multiple Dockerfile candidates with no clean path-name match, or whose source repo is unreachable. |
-| Crossplane package | An OCI artifact installed via a `Provider`, `Function`, or `Configuration` resource under `pkg.crossplane.io`. Carried as `.spec.package` rather than `image:`; resolves to a controller image typically built in a separate `github.com/<vendor>/provider-*` repo. |
-| `<build-system>-built` | An image produced without a Dockerfile, via Nix `dockerTools`, ko, Bazel rules_oci, or Jib. The "base" is read from the build manifest (`flake.nix`, `.ko.yaml`, `BUILD.bazel`, Jib config) instead of a `FROM` line. Common in vendor-Go projects like Crossplane core. |
-| Ubuntu LTS vs interim | LTS releases (`.04` of even years, e.g. 22.04 / 24.04 / 26.04) get 5+ years of standard support; interim releases (`24.10` / `25.04` / `25.10`) get 9 months. The two tracks are compared separately; an image on an interim release is `non-lts-interim`, not `one-behind`. |
-| `rolling-stable` vs `rolling-dev` | Two flavours of moving-target tag. Stable rebuilds against the current stable OS release (distroless, Chainguard, vendor-`:latest`); dev rebuilds against the OS's development branch (`alpine:edge`, `debian:sid`, `ubuntu:devel`). The latter is riskier. |
-| `tag-checkout: head-fallback` | The skill couldn't find a Git tag matching the image's version, so the Dockerfile was read from HEAD. FROMs may not match the released image. |
-
 ## Tools and Systems
 
 - **helm** — render the chart.
@@ -526,27 +390,10 @@ run — they are the output.
   resolution.
 - **jq** — emit and consume the structured report.
 
-## Common Scenarios
-
-**Auditing a vendored chart whose upstream is moving.** You
-vendored a chart six months ago because the upstream doesn't
-publish a Helm repo. You want to know which of the images its
-Dockerfiles build are now on an old major OS release. The
-chart's `Chart.yaml` carries a `sources:` URL pointing at the
-upstream Git repo, so step 2 resolves cleanly; the audit
-surfaces a Dockerfile that's still on Debian bookworm when
-trixie is current. The report's "follow-up" hint suggests
-bumping that specific Dockerfile when you next sync the vendored
-chart. See [examples/queenswood.md](./examples/queenswood.md)
-for the queenswood-chart walkthrough.
-
-**Locally-built service images on a stale base.** Your chart's
-own services build off `infra/docker/service/Dockerfile`; that
-Dockerfile is two years old and still on `debian:bullseye-slim`.
-The skill resolves these via the local-Dockerfile signal (no
-clone needed), parses `bullseye`, classifies as `unsupported`
-(Debian 11's standard support ended 2024-08-14), and the report
-foregrounds it as a high-priority finding.
+See [examples/queenswood.md](./examples/queenswood.md) for an
+end-to-end worked example covering vendored-chart auditing,
+local-Dockerfile resolution, and the `base-inferred-from-labels`
+fallback.
 
 ## Output Format
 
@@ -562,16 +409,11 @@ The skill emits two artifacts in the working directory:
 
 - **Read-only.** Never modify charts, Dockerfiles, or upstream
   repos. The skill is an audit, not a remediation.
-- **Always record the resolution signal.** Every image in the
-  report carries `resolution-signal: local | chart-sources |
-  slug-heuristic | oci-label | base-inferred-from-labels |
-  source-unknown`. No silent guesses.
-- **Always check out the release tag** matching the image's
-  version before reading a cloned Dockerfile. Reading HEAD will
-  silently report the *current dev* base, not the base that
-  built the image the chart pulls. If no matching tag exists,
-  record `tag-checkout: head-fallback` in the report — do not
-  hide the discrepancy.
+- **Always record the resolution signal.** Every image carries a
+  signal from the closed set defined in Step 2. No silent guesses.
+- **Always check out the release tag** before reading a cloned
+  Dockerfile (see Step 3.5); record `tag-checkout: head-fallback`
+  rather than silently reading HEAD.
 - **Multi-stage Dockerfiles report all FROMs**, not just the
   final stage. A build stage on a stale base is still a stale
   base in the dependency graph.
