@@ -89,15 +89,12 @@ read-only).
 
 ### Step 0: Render and inventory
 
-Render the chart with defaults and extract every image reference,
-including Crossplane package references (which use `package:`
-keys on `pkg.crossplane.io` resources, not `image:`).
-
-Use a YAML-aware parse, not a regex sweep. `helm template` emits
-multi-document YAML; `yaml.safe_load_all` walks it cleanly and
-lets you discriminate by `kind` / `apiVersion` so Crossplane
-packages don't get confused with unrelated `package:` keys
-elsewhere (npm `package.json` embedded in a ConfigMap, etc.).
+Render the chart and extract every image reference. Use a YAML-aware
+parse (not a regex sweep), discriminating by `kind` + `apiVersion`,
+so Crossplane packages (`.spec.package` on `pkg.crossplane.io`
+resources) are caught alongside `image:` keys without false positives
+from unrelated `package:` strings (e.g. an npm `package.json` in a
+ConfigMap).
 
 ```bash
 helm dependency update "$CHART"
@@ -393,27 +390,10 @@ run — they are the output.
   resolution.
 - **jq** — emit and consume the structured report.
 
-## Common Scenarios
-
-**Auditing a vendored chart whose upstream is moving.** You
-vendored a chart six months ago because the upstream doesn't
-publish a Helm repo. You want to know which of the images its
-Dockerfiles build are now on an old major OS release. The
-chart's `Chart.yaml` carries a `sources:` URL pointing at the
-upstream Git repo, so step 2 resolves cleanly; the audit
-surfaces a Dockerfile that's still on Debian bookworm when
-trixie is current. The report's "follow-up" hint suggests
-bumping that specific Dockerfile when you next sync the vendored
-chart. See [examples/queenswood.md](./examples/queenswood.md)
-for the queenswood-chart walkthrough.
-
-**Locally-built service images on a stale base.** Your chart's
-own services build off `infra/docker/service/Dockerfile`; that
-Dockerfile is two years old and still on `debian:bullseye-slim`.
-The skill resolves these via the local-Dockerfile signal (no
-clone needed), parses `bullseye`, classifies as `unsupported`
-(Debian 11's standard support ended 2024-08-14), and the report
-foregrounds it as a high-priority finding.
+See [examples/queenswood.md](./examples/queenswood.md) for an
+end-to-end worked example covering vendored-chart auditing,
+local-Dockerfile resolution, and the `base-inferred-from-labels`
+fallback.
 
 ## Output Format
 
@@ -429,16 +409,11 @@ The skill emits two artifacts in the working directory:
 
 - **Read-only.** Never modify charts, Dockerfiles, or upstream
   repos. The skill is an audit, not a remediation.
-- **Always record the resolution signal.** Every image in the
-  report carries `resolution-signal: local | chart-sources |
-  slug-heuristic | oci-label | base-inferred-from-labels |
-  source-unknown`. No silent guesses.
-- **Always check out the release tag** matching the image's
-  version before reading a cloned Dockerfile. Reading HEAD will
-  silently report the *current dev* base, not the base that
-  built the image the chart pulls. If no matching tag exists,
-  record `tag-checkout: head-fallback` in the report — do not
-  hide the discrepancy.
+- **Always record the resolution signal.** Every image carries a
+  signal from the closed set defined in Step 2. No silent guesses.
+- **Always check out the release tag** before reading a cloned
+  Dockerfile (see Step 3.5); record `tag-checkout: head-fallback`
+  rather than silently reading HEAD.
 - **Multi-stage Dockerfiles report all FROMs**, not just the
   final stage. A build stage on a stale base is still a stale
   base in the dependency graph.
