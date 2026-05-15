@@ -1,0 +1,31 @@
+{
+  "context": "Tests whether the agent classifies a docker.io/bitnamilegacy/* image as stale (the post-September-2025 verdict), flags the urgency (no patches coming), and recommends a per-workload escape that names actual replacements (Docker Official Postgres, CloudNativePG operator, Chainguard) rather than a generic 'Docker Official' pointer.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Classification is stale",
+      "description": "image-graph classifies docker.io/bitnamilegacy/postgresql:15.4.0 as tier=stale (NOT free, NOT free-with-caveats, NOT commercial — even though the underlying OS is free Debian, the source-family verdict dominates).",
+      "max_score": 40
+    },
+    {
+      "name": "Cites the Bitnami legacy archive context",
+      "description": "Report explicitly names the September 2025 Bitnami catalogue retirement OR explains that bitnamilegacy is a frozen archive receiving no patches.",
+      "max_score": 15
+    },
+    {
+      "name": "Recommends a per-workload escape",
+      "description": "Escape recommendation names at least one of: Docker Official Postgres (`postgres:15` or similar), CloudNativePG operator-managed Postgres, Chainguard `cgr.dev/chainguard/postgres`. Does NOT recommend a generic 'use Docker Official' without naming the specific image.",
+      "max_score": 20
+    },
+    {
+      "name": "Urgency flag present",
+      "description": "Stale-tier entry is flagged as urgent (e.g. 'Urgent: no patches coming for bitnamilegacy', or equivalent). The urgency is what differentiates stale from commercial.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "Report does NOT cite specific CVE identifiers. The skill classifies license tier, not vulnerability state.",
+      "max_score": 10
+    }
+  ]
+}

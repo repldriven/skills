@@ -1,0 +1,46 @@
+{
+  "context": "Integration test: a chart with images spanning all four license tiers. Tests that the agent correctly classifies each tier and emits a report sorted so the actionable findings (commercial + stale) appear at the top.",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "All four images present in graph",
+      "description": "image-graph.json contains entries for nginxinc/nginx-unprivileged, registry.access.redhat.com/ubi9/openjdk-21, docker.io/bitnami/postgresql:16, and docker.io/bitnamilegacy/redis:7.2.0. Nothing silently dropped.",
+      "max_score": 20
+    },
+    {
+      "name": "nginx classified as free",
+      "description": "nginxinc/nginx-unprivileged:1.27-alpine is tier=free (Alpine base).",
+      "max_score": 10
+    },
+    {
+      "name": "UBI classified as free-with-caveats",
+      "description": "registry.access.redhat.com/ubi9/openjdk-21 is tier=free-with-caveats.",
+      "max_score": 10
+    },
+    {
+      "name": "Bitnami versioned classified as commercial",
+      "description": "docker.io/bitnami/postgresql:16 is tier=commercial (post-retirement, the versioned tags are paid Bitnami Secure Images).",
+      "max_score": 10
+    },
+    {
+      "name": "Bitnami legacy classified as stale",
+      "description": "docker.io/bitnamilegacy/redis:7.2.0 is tier=stale.",
+      "max_score": 10
+    },
+    {
+      "name": "Report sort order puts commercial + stale at top",
+      "description": "image-graph.md's per-image table is sorted so the commercial (Bitnami versioned) and stale (Bitnami legacy) entries appear BEFORE free-with-caveats (UBI) and free (nginx). The actionable findings sit at the top.",
+      "max_score": 15
+    },
+    {
+      "name": "Escapes recommended for non-free entries",
+      "description": "The three non-free entries (UBI, Bitnami versioned, Bitnami legacy) carry escape recommendations. The free entry (nginx) carries no-escape-needed.",
+      "max_score": 15
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "Report does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

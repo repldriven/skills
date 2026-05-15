@@ -1,0 +1,1 @@
+Classify a registry.access.redhat.com/ubi9/* image as free-with-caveats (not free, not commercial); cite the Red Hat supported-software-list caveat; recommend a Rocky/Alma escape for users wanting full freedom.

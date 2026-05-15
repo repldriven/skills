@@ -1,0 +1,1 @@
+Emit the full graph for a chart with images spanning all 4 license tiers (free, free-with-caveats, commercial, stale); sort the report so commercial + stale entries appear at the top.

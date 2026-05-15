@@ -1,0 +1,36 @@
+{
+  "context": "Tests the no-OS-layer fallback path. Distroless and FROM scratch images are valid production patterns; the skill must classify them as tier=n/a with signal=distroless-or-scratch, not crash or mark them as detection-failed (which is reserved for true unknowns).",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Both images present in graph",
+      "description": "image-graph.json contains entries for both gcr.io/distroless/static-debian13:nonroot and ghcr.io/example/static-binary:1.0. Neither is silently dropped.",
+      "max_score": 25
+    },
+    {
+      "name": "Detection signal is distroless-or-scratch",
+      "description": "Both images carry detection signal 'distroless-or-scratch' (NOT 'detection-failed' or 'syft-scan'). The signal distinguishes 'no OS layer' from 'true unknown'.",
+      "max_score": 25
+    },
+    {
+      "name": "Tier classification is n/a",
+      "description": "Both images carry tier=n/a (or equivalent null / not-applicable marker). NOT classified as free/commercial/stale/free-with-caveats — there is no OS to apply a tier to.",
+      "max_score": 20
+    },
+    {
+      "name": "Escape recommendation is no-escape-needed",
+      "description": "Both images have escape=no-escape-needed; no actionable escape entry generated for either.",
+      "max_score": 10
+    },
+    {
+      "name": "Did not crash or invent an OS",
+      "description": "Report does NOT invent an OS for either image (e.g. does not assign 'debian' to the scratch image because the user named the binary that way). Does not error out partway through.",
+      "max_score": 10
+    },
+    {
+      "name": "No fabricated CVE references",
+      "description": "Report does NOT cite specific CVE identifiers.",
+      "max_score": 10
+    }
+  ]
+}

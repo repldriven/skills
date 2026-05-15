@@ -1,0 +1,13 @@
+{
+  "total_infeasible": 2,
+  "infeasible_scenarios": [
+    {
+      "scenario": "shares_layer edge correlation across a real chart",
+      "reasoning": "The v0.1 graph schema explicitly defers the shares_layer edge to v0.2. Evaluating it would require pulling per-image `crane manifest` calls against real registries during the eval, clustering by layer SHA, and asserting the cluster shape. Real value (the 'one base problem, not eight' insight) but a separate engineering chunk that doesn't fit the v0.1 scope."
+    },
+    {
+      "scenario": "Private-registry detection-chain pass with cosign auth",
+      "reasoning": "Walking the cosign-attestation step against a private registry requires credentials threaded through the eval sandbox. The default Tessl eval environment doesn't carry private-registry creds. We can evaluate the cosign-first ordering using inline SBOM fixtures (as scenario `rhel-ubi-free-with-caveats` does), but a true private-registry end-to-end is out of reach."
+    }
+  ]
+}

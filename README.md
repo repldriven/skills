@@ -22,6 +22,12 @@ Tessl convention.
   `license-aware`, `interim-caution`, or `not-recommended`, and
   emit a markdown advice doc. Tells you which bumps a downstream
   tool can apply unattended and which need migration work.
+- **[map-helm-chart-image-bases](skills/map-helm-chart-image-bases/SKILL.md)**
+  — Build a dependency graph of every base OS a chart pulls and
+  classify each into `free` / `free-with-caveats` / `commercial` /
+  `stale` tiers, with per-source-family escape recommendations.
+  Complements the audit skill by tracking *licensing* rather than
+  *currency* — the post-Bitnami-retirement audit question.
 
 ## Companion tools
 
