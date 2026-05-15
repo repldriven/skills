@@ -1,13 +1,18 @@
 ---
 name: advise-base-bump-safety
 description: >
-  Given a list of Dockerfile base-image bumps proposed by an audit
-  (current FROM → suggested FROM), classify each as safe-mechanical,
-  requires-migration, license-aware, interim-caution, or
-  not-recommended, and emit a per-image markdown advice doc. Pairs
-  with audit-helm-chart-image-bases (this skill's input) and the
-  chart-supply-refresh CLI (the tool that applies the safe-mechanical
-  subset deterministically).
+  Use when the user has output from audit-helm-chart-image-bases (or
+  is otherwise asked to triage Docker base-image upgrades) and needs
+  to know which bumps are safe to apply unattended versus which need
+  migration work. Triggers on: "upgrade base images", "update Docker
+  images", "container image version bumps", "Docker FROM line
+  changes", "is it safe to bump bookworm to trixie", "review this
+  Renovate base-image PR". Classifies each proposed FROM → FROM bump
+  as safe-mechanical, requires-migration, license-aware,
+  interim-caution, or not-recommended, and emits a per-image markdown
+  advice doc. Pairs with audit-helm-chart-image-bases (this skill's
+  input) and the chart-supply-refresh CLI (the tool that applies the
+  safe-mechanical subset deterministically).
 domain: cybersecurity
 subdomain: supply-chain-security
 tags:
@@ -301,18 +306,6 @@ If `--json` is passed, also emit:
 
 - `advice.json` — structured findings, one entry per FROM, with
   the classification + indicators recorded.
-
-## Key Concepts
-
-| Term | Meaning |
-| --- | --- |
-| Indicator | A named heuristic that, when matched, justifies a classification. Indicators are listed by name in the rubric and quoted verbatim in the advice doc, so the user can see what evidence the skill weighed. |
-| `safe-mechanical` | The bump is a pure version-tag swap with no runtime ABI implication. The downstream tool can apply it without human review. |
-| `requires-migration` | Mechanically possible but introduces ABI / behavioural change likely to break the workload. Needs code / config / wheel-rebuild changes. |
-| `license-aware` | Crosses a vendor licensing or support-model boundary (RHEL UBI majors, Oracle JDK, Chainguard tier). Bump is legally / contractually consequential. |
-| `interim-caution` | Lands on a short-support track (Ubuntu interim, Fedora). Recommend the LTS alternative unless the user explicitly opts in. |
-| `not-recommended` | Goes backwards, into EOL, or stays on a development branch. Should not be applied as proposed. |
-| `no-action-needed` | The audit didn't flag the FROM as stale (currency: `current` or `rolling-stable`). Reported for completeness; no advice generated. |
 
 ## Hard Constraints
 
